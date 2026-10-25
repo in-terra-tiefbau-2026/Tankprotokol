@@ -1,0 +1,957 @@
+<meta charset="UTF-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Tankprotokoll Baustelle</title>
+<style>
+/* Layout: eine Karte mit großen Eingabefeldern, darunter eine Liste der letzten Einträge */
+:root{
+  --bg:#f3f1ea;
+  --surface:#ffffff;
+  --ink:#1f2a24;
+  --muted:#5c6b63;
+  --accent:#d4621f;
+  --accent-ink:#ffffff;
+  --line:#dedad0;
+  --ok:#2f6b4f;
+  --ok-bg:#e4efe8;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1f1c;
+    --surface:#242a25;
+    --ink:#eee9df;
+    --muted:#9fab9f;
+    --accent:#e07a35;
+    --accent-ink:#1b1206;
+    --line:#39403a;
+    --ok:#7fc79c;
+    --ok-bg:#1f3129;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1f1c;
+  --surface:#242a25;
+  --ink:#eee9df;
+  --muted:#9fab9f;
+  --accent:#e07a35;
+  --accent-ink:#1b1206;
+  --line:#39403a;
+  --ok:#7fc79c;
+  --ok-bg:#1f3129;
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Inter","Segoe UI",system-ui,sans-serif;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:28px 60px;
+}
+.wrap{max-width:640px;margin:0 auto}
+
+h1{
+  font-size:clamp(24px,5vw,30px);
+  font-weight:800;
+  margin:0 0 4px;
+  letter-spacing:-0.01em;
+  text-wrap:balance;
+}
+.sub{color:var(--muted);margin:0 0 22px;font-size:15px}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:18px;
+}
+
+label{
+  display:block;
+  font-weight:700;
+  font-size:16px;
+  margin:18px 0 8px;
+}
+label:first-of-type{margin-top:0}
+.hint{font-weight:400;color:var(--muted);font-size:13px;display:block;margin-top:2px}
+
+input, select{
+  width:100%;
+  font-size:19px;
+  padding:14px 14px;
+  border-radius:10px;
+  border:2px solid var(--line);
+  background:var(--bg);
+  color:var(--ink);
+  font-family:inherit;
+  min-height:52px;
+}
+input:focus, select:focus{
+  outline:3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset:1px;
+  border-color:var(--accent);
+}
+input[type=number]{font-variant-numeric:tabular-nums}
+input[readonly]{background:var(--line);color:var(--muted);cursor:not-allowed}
+
+.row2{display:flex;gap:12px;flex-wrap:wrap}
+.row2 > div{flex:1;min-width:140px}
+
+#serial-wrap{margin-top:14px}
+
+.diff-box{
+  margin-top:18px;
+  background:var(--bg);
+  border:1px dashed var(--line);
+  border-radius:12px;
+  padding:14px 16px;
+  font-size:15px;
+  color:var(--muted);
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+}
+.diff-box strong{color:var(--ink);font-size:18px;font-variant-numeric:tabular-nums}
+
+.upload-box{
+  margin-top:4px;
+  position:relative;
+  border:2px dashed var(--line);
+  border-radius:12px;
+  background:var(--bg);
+  min-height:90px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.upload-box input[type=file]{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  cursor:pointer;
+  min-height:90px;
+}
+.upload-placeholder{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  color:var(--muted);
+  font-size:14px;
+  font-weight:600;
+  padding:18px;
+  text-align:center;
+  pointer-events:none;
+}
+.upload-icon{font-size:26px}
+.upload-preview{
+  width:100%;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+.upload-preview img{
+  max-width:100%;
+  max-height:220px;
+  border-radius:8px;
+  display:block;
+}
+.upload-remove{
+  position:relative;
+  z-index:2;
+  background:transparent;
+  border:2px solid var(--line);
+  color:var(--ink);
+  border-radius:8px;
+  padding:8px 14px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.submit{
+  width:100%;
+  margin-top:22px;
+  background:var(--accent);
+  color:var(--accent-ink);
+  border:none;
+  border-radius:12px;
+  padding:18px;
+  font-size:19px;
+  font-weight:800;
+  cursor:pointer;
+}
+.submit:active{transform:scale(.99)}
+
+.msg{
+  margin-top:12px;
+  background:var(--ok-bg);
+  color:var(--ok);
+  border-radius:10px;
+  padding:12px 14px;
+  font-weight:700;
+  font-size:15px;
+  text-align:center;
+}
+.msg[hidden]{display:none}
+
+.err{color:#c0392b;font-weight:700;font-size:14px;margin-top:8px}
+.err[hidden]{display:none}
+
+h2{font-size:18px;margin:0 0 12px;font-weight:800}
+
+.entry{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+  font-size:15px;
+}
+.entry:last-child{border-bottom:none}
+.entry .left{display:flex;flex-direction:column;gap:3px;min-width:0}
+.entry .left .top{font-weight:700}
+.entry .left .bottom{color:var(--muted);font-size:13px}
+.entry .amount{font-weight:800;font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.entry .thumb{
+  width:40px;
+  height:40px;
+  object-fit:cover;
+  border-radius:8px;
+  border:1px solid var(--line);
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+.lightbox{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.82);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  z-index:50;
+}
+.lightbox[hidden]{display:none}
+.lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 0}
+
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.summary-tile{
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 16px;
+}
+.summary-tile .m-name{font-size:14px;font-weight:700;color:var(--muted)}
+.summary-tile .m-total{
+  font-size:22px;
+  font-weight:800;
+  margin-top:4px;
+  font-variant-numeric:tabular-nums;
+}
+.summary-tile .m-count{font-size:12px;color:var(--muted);margin-top:2px}
+
+.export-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.export-btn{
+  flex:1;
+  min-width:160px;
+  background:transparent;
+  border:2px solid var(--line);
+  color:var(--ink);
+  border-radius:10px;
+  padding:13px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+</style>
+
+<div class="wrap">
+  <h1>⛽ Tankprotokoll</h1>
+  <p class="sub">Bitte nach jeder Betankung ausfüllen.</p>
+
+  <div class="card">
+    <form id="form">
+      <label for="datum">Datum</label>
+      <input type="date" id="datum" required>
+
+      <label for="baustelle">Baustelle</label>
+      <input type="text" id="baustelle" placeholder="z. B. Hannover, Dragonerstraße" required>
+
+      <label for="machine">Maschine</label>
+      <select id="machine" required>
+        <option value="" disabled selected>Bitte auswählen …</option>
+        <option value="Bagger">Bagger</option>
+        <option value="Radlader">Radlader</option>
+        <option value="Dumper">Dumper</option>
+        <option value="LKW">LKW</option>
+        <option value="Erdrakete">Erdrakete</option>
+        <option value="Rüttelplatte">Rüttelplatte</option>
+      </select>
+
+      <div id="serial-wrap">
+        <label for="serial">Seriennummer der Maschine</label>
+        <input type="text" id="serial" placeholder="z. B. RP-2024-118" required>
+      </div>
+
+      <label for="menge">Betankungsmenge (Liter)</label>
+      <input type="number" id="menge" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 15" required>
+
+      <label for="kartennummer">Kartennummer (Tankkarte)</label>
+      <input type="text" id="kartennummer" inputmode="numeric" placeholder="z. B. 1234" required>
+
+      <div class="row2">
+        <div>
+          <label for="anfang">Tankwagen Anfang (Liter)</label>
+          <input type="number" id="anfang" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 500" required>
+        </div>
+        <div>
+          <label for="ende">Tankwagen Ende (Liter)<span class="hint">wird automatisch berechnet</span></label>
+          <input type="number" id="ende" min="0" step="0.1" inputmode="decimal" placeholder="–" readonly tabindex="-1">
+        </div>
+      </div>
+
+      <div class="diff-box">
+        <span>Verbrauch Tankwagen (Anfang − Menge)</span>
+        <strong id="diff-out">–</strong>
+      </div>
+
+      <label for="lieferschein">Lieferschein (Foto)</label>
+      <div class="upload-box" id="upload-box">
+        <input type="file" id="lieferschein" accept="image/*" capture="environment">
+        <div id="upload-placeholder" class="upload-placeholder">
+          <span class="upload-icon">📷</span>
+          <span>Foto aufnehmen oder auswählen</span>
+        </div>
+        <div id="upload-preview" class="upload-preview" hidden>
+          <img id="upload-img" alt="Lieferschein Vorschau">
+          <button type="button" id="upload-remove" class="upload-remove">Entfernen</button>
+        </div>
+      </div>
+
+      <p class="err" id="err" hidden></p>
+      <button type="submit" class="submit">Eintrag speichern</button>
+      <p class="msg" id="ok" hidden>✓ Eintrag gespeichert</p>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Verbrauch pro Maschine</h2>
+    <div id="summary"></div>
+  </div>
+
+  <div class="card">
+    <h2>Letzte Einträge</h2>
+    <div id="list"></div>
+    <div class="export-row">
+      <button class="export-btn" id="export-btn" hidden>Als Text kopieren</button>
+      <button class="export-btn" id="export-csv-btn" hidden>Als CSV kopieren (für Excel)</button>
+      <button class="export-btn" id="export-pdf-btn" hidden>Als PDF speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <img id="lightbox-img" alt="Lieferschein groß">
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+  var STORE_KEY = 'tankprotokoll_entries_v1';
+  var form = document.getElementById('form');
+  var datumEl = document.getElementById('datum');
+  var baustelleEl = document.getElementById('baustelle');
+  var machineEl = document.getElementById('machine');
+  var mengeEl = document.getElementById('menge');
+  var kartennummerEl = document.getElementById('kartennummer');
+  var lieferscheinInput = document.getElementById('lieferschein');
+  var uploadPlaceholder = document.getElementById('upload-placeholder');
+  var uploadPreview = document.getElementById('upload-preview');
+  var uploadImg = document.getElementById('upload-img');
+  var uploadRemove = document.getElementById('upload-remove');
+  var currentPhoto = null;
+  var anfangEl = document.getElementById('anfang');
+  var endeEl = document.getElementById('ende');
+  var serialEl = document.getElementById('serial');
+  var diffOut = document.getElementById('diff-out');
+  var errEl = document.getElementById('err');
+  var okEl = document.getElementById('ok');
+  var listEl = document.getElementById('list');
+  var summaryEl = document.getElementById('summary');
+  var exportBtn = document.getElementById('export-btn');
+  var exportCsvBtn = document.getElementById('export-csv-btn');
+  var exportPdfBtn = document.getElementById('export-pdf-btn');
+
+  var downloadsCap = null;
+  var db = null;
+  var assetsCap = null;
+  var usingDb = false;
+  var entriesCache = []; // immer neueste zuerst, egal welcher Speicherweg
+
+  function initStorage(){
+    if(!(window.claude && window.claude.use)){
+      // Kein Artefakt-Laufzeitumfeld (z. B. lokal geöffnete Datei) -> Browser-Speicher
+      entriesCache = loadLocalEntries();
+      render();
+      return;
+    }
+    Promise.all([
+      window.claude.use('db').catch(function(){ return null; }),
+      window.claude.use('assets').catch(function(){ return null; }),
+      window.claude.use('downloads').catch(function(){ return null; })
+    ]).then(function(res){
+      db = res[0];
+      assetsCap = res[1];
+      downloadsCap = res[2];
+      if(db){
+        usingDb = true;
+        subscribeDb();
+        if(!assetsCap){
+          errEl.textContent = 'Hinweis: Mit deiner aktuellen Freigabe können keine Fotos gespeichert werden (nur Lese- oder Kommentarrecht). Bitte vom Eigentümer als „Contributor" freigeben lassen.';
+          errEl.hidden = false;
+        }
+      } else {
+        entriesCache = loadLocalEntries();
+        render();
+      }
+    });
+  }
+
+  function subscribeDb(){
+    db.collection('entries').orderBy('erstellt', 'desc').limit(500).onSnapshot(function(snap){
+      entriesCache = snap.docs.map(function(d){
+        var data = d.data() || {};
+        data._id = d.id;
+        return data;
+      });
+      render();
+    }, function(err){
+      usingDb = false;
+      entriesCache = loadLocalEntries();
+      render();
+      errEl.textContent = 'Zentrale Speicherung nicht erreichbar (' + err.code + '). Einträge werden nur lokal auf diesem Gerät gespeichert.';
+      errEl.hidden = false;
+    });
+  }
+
+  // --- Lokaler Fallback (Browser-Speicher auf diesem Gerät) ---
+  function loadLocalEntries(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      var list = raw ? JSON.parse(raw) : [];
+      return list.slice().reverse();
+    }catch(e){ return []; }
+  }
+  function saveLocalEntries(newestFirstList){
+    var oldestFirst = newestFirstList.slice().reverse();
+    localStorage.setItem(STORE_KEY, JSON.stringify(oldestFirst));
+  }
+
+  function todayISO(){
+    var d = new Date();
+    var m = String(d.getMonth()+1).padStart(2,'0');
+    var day = String(d.getDate()).padStart(2,'0');
+    return d.getFullYear()+'-'+m+'-'+day;
+  }
+
+  // --- Entwurf-Sicherung: rettet Eingaben, falls die Seite unerwartet
+  // neu lädt (z. B. wenn das Handy die Seite im Hintergrund entlädt) ---
+  var DRAFT_KEY = 'tankprotokoll_draft_v1';
+  var draftFields = [datumEl, baustelleEl, machineEl, serialEl, mengeEl, kartennummerEl, anfangEl, endeEl];
+
+  function saveDraft(){
+    try{
+      var draft = {};
+      draftFields.forEach(function(el){ draft[el.id] = el.value; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    }catch(e){}
+  }
+  function clearDraft(){
+    try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
+  }
+  function restoreDraft(){
+    try{
+      var raw = localStorage.getItem(DRAFT_KEY);
+      if(!raw) return;
+      var draft = JSON.parse(raw);
+      var hasContent = false;
+      draftFields.forEach(function(el){
+        if(draft[el.id]){
+          el.value = draft[el.id];
+          if(el.id !== 'datum') hasContent = true;
+        }
+      });
+      if(hasContent){
+        updateDiff();
+        okEl.textContent = 'Nicht gespeicherter Entwurf wiederhergestellt – bitte prüfen und erneut speichern.';
+        okEl.hidden = false;
+      }
+    }catch(e){}
+  }
+  draftFields.forEach(function(el){
+    el.addEventListener('input', saveDraft);
+    el.addEventListener('change', saveDraft);
+  });
+
+  datumEl.value = todayISO();
+  restoreDraft();
+
+  // Tankwagen Ende wird nicht mehr eingetippt, sondern aus
+  // Anfang − Betankungsmenge berechnet.
+  function updateDiff(){
+    var a = parseFloat(anfangEl.value);
+    var m = parseFloat(mengeEl.value);
+    if(isFinite(a) && isFinite(m)){
+      var ende = Math.round((a - m) * 10) / 10;
+      endeEl.value = ende; // number-input braucht Punkt statt Komma als Dezimaltrennzeichen
+      diffOut.textContent = ende.toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l';
+    } else {
+      endeEl.value = '';
+      diffOut.textContent = '–';
+    }
+  }
+  anfangEl.addEventListener('input', updateDiff);
+  mengeEl.addEventListener('input', updateDiff);
+
+  var currentPhotoDataUrl = null;
+
+  function showPhotoPreview(dataUrl){
+    currentPhoto = dataUrl;
+    currentPhotoDataUrl = dataUrl;
+    uploadImg.src = dataUrl;
+    uploadPlaceholder.hidden = true;
+    uploadPreview.hidden = false;
+  }
+  function clearPhoto(){
+    currentPhoto = null;
+    currentPhotoDataUrl = null;
+    uploadImg.src = '';
+    lieferscheinInput.value = '';
+    uploadPlaceholder.hidden = false;
+    uploadPreview.hidden = true;
+  }
+  function dataUrlToBlob(dataUrl){
+    return fetch(dataUrl).then(function(r){ return r.blob(); });
+  }
+
+  function compressImage(file, callback){
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var img = new Image();
+      img.onload = function(){
+        var maxW = 1000;
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = function(){ callback(null); };
+      img.src = ev.target.result;
+    };
+    reader.onerror = function(){ callback(null); };
+    reader.readAsDataURL(file);
+  }
+
+  lieferscheinInput.addEventListener('change', function(){
+    var file = lieferscheinInput.files && lieferscheinInput.files[0];
+    if(!file) return;
+    compressImage(file, function(dataUrl){
+      if(dataUrl) showPhotoPreview(dataUrl);
+    });
+  });
+
+  uploadRemove.addEventListener('click', function(ev){
+    ev.preventDefault();
+    clearPhoto();
+  });
+
+  function photoSrc(val){
+    if(!val) return '';
+    if(typeof val === 'string' && val.indexOf('data:') === 0) return val;
+    return '/_blob/' + val;
+  }
+
+  function fmtDate(iso){
+    var p = iso.split('-');
+    if(p.length !== 3) return iso;
+    return p[2]+'.'+p[1]+'.'+p[0];
+  }
+
+  function renderSummary(entries){
+    if(entries.length === 0){
+      summaryEl.innerHTML = '<p class="empty">Noch keine Daten für eine Auswertung.</p>';
+      return;
+    }
+    var totals = {};
+    entries.forEach(function(en){
+      if(!totals[en.machine]) totals[en.machine] = {sum:0, count:0};
+      totals[en.machine].sum += Number(en.menge) || 0;
+      totals[en.machine].count += 1;
+    });
+    var names = Object.keys(totals).sort(function(a,b){
+      return totals[b].sum - totals[a].sum;
+    });
+    summaryEl.innerHTML = '<div class="summary-grid">' + names.map(function(name){
+      var t = totals[name];
+      return '<div class="summary-tile">' +
+        '<div class="m-name">' + escapeHtml(name) + '</div>' +
+        '<div class="m-total">' + t.sum.toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l</div>' +
+        '<div class="m-count">' + t.count + ' Betankung' + (t.count === 1 ? '' : 'en') + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  function render(){
+    var entries = entriesCache;
+    renderSummary(entries);
+    if(entries.length === 0){
+      listEl.innerHTML = '<p class="empty">Noch keine Einträge vorhanden.</p>';
+      exportBtn.hidden = true;
+      exportCsvBtn.hidden = true;
+      exportPdfBtn.hidden = true;
+      return;
+    }
+    exportBtn.hidden = false;
+    exportCsvBtn.hidden = false;
+    exportPdfBtn.hidden = false;
+    listEl.innerHTML = entries.map(function(en){
+      return '<div class="entry">' +
+        '<div class="left">' +
+          '<span class="top">' + escapeHtml(en.machine) + ' · ' + escapeHtml(en.serial) + '</span>' +
+          '<span class="bottom">' + fmtDate(en.datum) + ' — ' + escapeHtml(en.baustelle) + ' · Karte ' + escapeHtml(en.kartennummer || '–') + '</span>' +
+        '</div>' +
+        (en.lieferschein ?
+          '<img class="thumb" src="' + photoSrc(en.lieferschein) + '" alt="Lieferschein" data-full="' + photoSrc(en.lieferschein) + '">' :
+          '') +
+        '<div class="amount">' + Number(en.menge).toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightbox-img');
+  listEl.addEventListener('click', function(e){
+    var t = e.target.closest('.thumb');
+    if(!t) return;
+    lightboxImg.src = t.dataset.full;
+    lightbox.hidden = false;
+  });
+  lightbox.addEventListener('click', function(){
+    lightbox.hidden = true;
+    lightboxImg.src = '';
+  });
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function resetForm(){
+    baustelleEl.value = '';
+    machineEl.value = '';
+    serialEl.value = '';
+    mengeEl.value = '';
+    kartennummerEl.value = '';
+    anfangEl.value = '';
+    endeEl.value = '';
+    diffOut.textContent = '–';
+    clearPhoto();
+    clearDraft();
+    baustelleEl.focus();
+  }
+
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    errEl.hidden = true;
+    okEl.hidden = true;
+
+    var datum = datumEl.value;
+    var baustelle = baustelleEl.value.trim();
+    var machine = machineEl.value;
+    var serial = serialEl.value.trim();
+    var menge = parseFloat(mengeEl.value);
+    var kartennummer = kartennummerEl.value.trim();
+    var anfang = parseFloat(anfangEl.value);
+    var ende = parseFloat(endeEl.value);
+
+    if(!datum || !baustelle || !machine || !serial || !isFinite(menge) || !kartennummer || !isFinite(anfang) || !isFinite(ende)){
+      errEl.textContent = 'Bitte alle Felder ausfüllen.';
+      errEl.hidden = false;
+      return;
+    }
+    if(ende > anfang){
+      errEl.textContent = 'Die Endmenge kann nicht größer als die Anfangsmenge sein.';
+      errEl.hidden = false;
+      return;
+    }
+
+    var baseEntry = {
+      datum: datum,
+      baustelle: baustelle,
+      machine: machine,
+      serial: serial,
+      menge: menge,
+      kartennummer: kartennummer,
+      anfang: anfang,
+      ende: ende,
+      erstellt: new Date().toISOString()
+    };
+
+    var submitBtn = form.querySelector('.submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Wird gespeichert …';
+
+    function finish(okText){
+      okEl.textContent = okText;
+      okEl.hidden = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Eintrag speichern';
+      resetForm();
+    }
+    function fail(msg){
+      errEl.textContent = msg;
+      errEl.hidden = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Eintrag speichern';
+    }
+
+    if(usingDb){
+      var photoPromise = currentPhotoDataUrl
+        ? dataUrlToBlob(currentPhotoDataUrl).then(function(blob){
+            if(!assetsCap) return null; // kein Upload-Recht -> ohne Foto speichern
+            return assetsCap.upload(blob, {type:'image/jpeg'}).then(function(res){ return res.id; }).catch(function(){ return null; });
+          })
+        : Promise.resolve(null);
+
+      photoPromise.then(function(photoId){
+        baseEntry.lieferschein = photoId;
+        return db.collection('entries').add(baseEntry);
+      }).then(function(){
+        if(currentPhotoDataUrl && !baseEntry.lieferschein){
+          finish('✓ Eintrag gespeichert (Foto konnte nicht hochgeladen werden)');
+        } else {
+          finish('✓ Eintrag gespeichert');
+        }
+      }).catch(function(err){
+        if(err && err.code === 'invalid_argument'){
+          fail('Keine Berechtigung zum Speichern. Bitte vom Eigentümer als „Contributor“ freigeben lassen.');
+        } else {
+          fail('Speichern fehlgeschlagen. Bitte erneut versuchen.');
+        }
+      });
+    } else {
+      // Lokaler Fallback auf diesem Gerät
+      baseEntry.lieferschein = currentPhotoDataUrl;
+      var newList = [baseEntry].concat(entriesCache);
+      try{
+        saveLocalEntries(newList);
+        entriesCache = newList;
+        render();
+        finish('✓ Eintrag gespeichert (nur lokal auf diesem Gerät)');
+      }catch(e){
+        baseEntry.lieferschein = null;
+        try{
+          saveLocalEntries(newList);
+          entriesCache = newList;
+          render();
+          finish('✓ Eintrag gespeichert (Foto wegen Speicherplatz nicht gesichert, nur lokal auf diesem Gerät)');
+        }catch(e2){
+          fail('Speicher ist voll. Bitte alte Einträge exportieren und Browser-Daten leeren.');
+        }
+      }
+    }
+  });
+
+  exportBtn.addEventListener('click', function(){
+    var entries = entriesCache;
+    var lines = entries.map(function(en){
+      return [fmtDate(en.datum), en.baustelle, en.machine, en.serial,
+        'Menge: '+en.menge+' l', 'Karte: '+en.kartennummer, 'Anfang: '+en.anfang+' l', 'Ende: '+en.ende+' l',
+        en.lieferschein ? 'Beleg: ja' : 'Beleg: nein'].join(' | ');
+    });
+    var text = lines.join('\n');
+    function fallbackSelect(){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(fallbackSelect);
+    } else {
+      fallbackSelect();
+    }
+    exportBtn.textContent = 'Kopiert ✓';
+    setTimeout(function(){ exportBtn.textContent = 'Liste als Text kopieren'; }, 1800);
+  });
+
+  function csvCell(v){
+    var s = String(v);
+    if(/[;"\n]/.test(s)) s = '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+
+  exportCsvBtn.addEventListener('click', function(){
+    var entries = entriesCache;
+    var header = ['Datum','Baustelle','Maschine','Seriennummer','Menge (l)','Kartennummer','Anfang (l)','Ende (l)','Beleg vorhanden'];
+    var rows = entries.map(function(en){
+      return [fmtDate(en.datum), en.baustelle, en.machine, en.serial, en.menge, en.kartennummer, en.anfang, en.ende, en.lieferschein ? 'ja' : 'nein']
+        .map(csvCell).join(';');
+    });
+    var csv = header.join(';') + '\n' + rows.join('\n');
+    function fallbackSelect(){
+      var ta = document.createElement('textarea');
+      ta.value = csv;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(csv).catch(fallbackSelect);
+    } else {
+      fallbackSelect();
+    }
+    exportCsvBtn.textContent = 'Kopiert ✓';
+    setTimeout(function(){ exportCsvBtn.textContent = 'Als CSV kopieren (für Excel)'; }, 1800);
+  });
+
+  exportPdfBtn.addEventListener('click', function(){
+    var entries = entriesCache;
+    if(!entries.length) return;
+
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      errEl.textContent = 'PDF-Werkzeug konnte nicht geladen werden. Bitte Seite neu laden.';
+      errEl.hidden = false;
+      return;
+    }
+
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    var pageW = doc.internal.pageSize.getWidth();
+    var marginX = 14;
+    var y = 16;
+
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(16);
+    doc.text('Tankprotokoll Baustelle', marginX, y);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(110,110,110);
+    doc.text('Erstellt am ' + new Date().toLocaleDateString('de-DE'), marginX, y + 6);
+    doc.setTextColor(0,0,0);
+    y += 16;
+
+    var cols = [
+      {label:'Datum', w:20},
+      {label:'Baustelle', w:38},
+      {label:'Maschine', w:26},
+      {label:'Seriennr.', w:28},
+      {label:'Menge (l)', w:22},
+      {label:'Kartennr.', w:24},
+      {label:'Anfang (l)', w:24},
+      {label:'Ende (l)', w:22},
+      {label:'Verbrauch TW (l)', w:28}
+    ];
+    var rowH = 8;
+
+    function drawHeader(){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9.5);
+      doc.setFillColor(212,98,31);
+      doc.setTextColor(255,255,255);
+      doc.rect(marginX, y, pageW - marginX*2, rowH, 'F');
+      var x = marginX;
+      cols.forEach(function(c){
+        doc.text(c.label, x + 2, y + rowH/2 + 1.2);
+        x += c.w;
+      });
+      doc.setTextColor(0,0,0);
+      y += rowH;
+    }
+
+    drawHeader();
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+
+    entries.forEach(function(en, i){
+      if(y + rowH > doc.internal.pageSize.getHeight() - 14){
+        doc.addPage();
+        y = 16;
+        drawHeader();
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(9);
+      }
+      if(i % 2 === 0){
+        doc.setFillColor(246,243,236);
+        doc.rect(marginX, y, pageW - marginX*2, rowH, 'F');
+      }
+      var verbrauch = (en.anfang - en.ende);
+      var vals = [
+        fmtDate(en.datum),
+        en.baustelle,
+        en.machine,
+        en.serial,
+        String(en.menge),
+        en.kartennummer || '–',
+        String(en.anfang),
+        String(en.ende),
+        verbrauch.toLocaleString('de-DE',{maximumFractionDigits:1})
+      ];
+      var x = marginX;
+      vals.forEach(function(v, idx){
+        var w = cols[idx].w;
+        var text = doc.splitTextToSize(String(v), w - 4)[0] || '';
+        doc.text(text, x + 2, y + rowH/2 + 1.2);
+        x += w;
+      });
+      doc.setDrawColor(222,218,208);
+      doc.line(marginX, y + rowH, pageW - marginX, y + rowH);
+      y += rowH;
+    });
+
+    var filename = 'tankprotokoll_' + todayISO() + '.pdf';
+    var blob = doc.output('blob');
+
+    function fallbackOpen(){
+      var url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }
+
+    if(downloadsCap && downloadsCap.save){
+      downloadsCap.save({ filename: filename, data: blob }).catch(function(){
+        fallbackOpen();
+      });
+    } else {
+      fallbackOpen();
+    }
+  });
+
+  render();
+  initStorage();
+})();
+</script>
