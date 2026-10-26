@@ -132,6 +132,13 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       <label for="baustelle">Baustelle</label>
       <input type="text" id="baustelle" placeholder="z. B. Hannover, Dragonerstraße" required>
 
+      <label for="tankquelle">Tankquelle</label>
+      <select id="tankquelle" required>
+        <option value="" disabled selected>Bitte auswählen …</option>
+        <option value="Tankwagen">Tankwagen</option>
+        <option value="DKV-Karte">DKV-Karte</option>
+      </select>
+
       <label for="machine">Maschine</label>
       <select id="machine" required>
         <option value="" disabled selected>Bitte auswählen …</option>
@@ -139,6 +146,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         <option value="Radlader">Radlader</option>
         <option value="Dumper">Dumper</option>
         <option value="LKW">LKW</option>
+        <option value="MAN">MAN</option>
         <option value="Erdrakete">Erdrakete</option>
         <option value="Rüttelplatte">Rüttelplatte</option>
       </select>
@@ -148,16 +156,21 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         <input type="text" id="serial" placeholder="z. B. RP-2024-118" required>
       </div>
 
+      <div id="stand-wrap">
+        <label for="stand" id="stand-label">Betriebsstunden vor dem Tanken</label>
+        <input type="number" id="stand" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 1234" required>
+      </div>
+
       <label for="menge">Betankungsmenge (Liter)</label>
       <input type="number" id="menge" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 15" required>
 
       <label for="kartennummer">Kartennummer (Tankkarte)</label>
       <input type="text" id="kartennummer" inputmode="numeric" placeholder="z. B. 1234" required>
 
-      <div class="row2">
+      <div class="row2" id="tankwagen-wrap">
         <div>
           <label for="anfang">Tankwagen Anfang (Liter)</label>
-          <input type="number" id="anfang" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 500" required>
+          <input type="number" id="anfang" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 500">
         </div>
         <div>
           <label for="ende">Tankwagen Ende (Liter)<span class="hint">wird automatisch berechnet</span></label>
@@ -165,7 +178,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         </div>
       </div>
 
-      <div class="diff-box">
+      <div class="diff-box" id="diff-box">
         <span>Verbrauch Tankwagen (Anfang − Menge)</span>
         <strong id="diff-out">–</strong>
       </div>
@@ -234,6 +247,9 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   var form = document.getElementById('form');
   var datumEl = document.getElementById('datum');
   var baustelleEl = document.getElementById('baustelle');
+  var tankquelleEl = document.getElementById('tankquelle');
+  var tankwagenWrap = document.getElementById('tankwagen-wrap');
+  var diffBox = document.getElementById('diff-box');
   var machineEl = document.getElementById('machine');
   var mengeEl = document.getElementById('menge');
   var kartennummerEl = document.getElementById('kartennummer');
@@ -245,6 +261,32 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   var anfangEl = document.getElementById('anfang');
   var endeEl = document.getElementById('ende');
   var serialEl = document.getElementById('serial');
+  var standEl = document.getElementById('stand');
+  var standLabelEl = document.getElementById('stand-label');
+
+  // Maschinen mit Kilometerstand (alles andere -> Betriebsstunden)
+  var KM_MASCHINEN = ['LKW', 'MAN'];
+  function updateStandLabel(){
+    var istKm = KM_MASCHINEN.indexOf(machineEl.value) !== -1;
+    standLabelEl.textContent = istKm ? 'Kilometerstand aktuell' : 'Betriebsstunden vor dem Tanken';
+    standEl.placeholder = istKm ? 'z. B. 185400' : 'z. B. 1234';
+  }
+  machineEl.addEventListener('change', updateStandLabel);
+  updateStandLabel();
+
+  // Tankquelle: Tankwagen (mit Anfang/Ende) vs. DKV-Karte (nur Menge)
+  function updateTankquelle(){
+    var istTankwagen = tankquelleEl.value === 'Tankwagen';
+    tankwagenWrap.hidden = !istTankwagen;
+    diffBox.hidden = !istTankwagen;
+    anfangEl.required = istTankwagen;
+    if(!istTankwagen){
+      anfangEl.value = '';
+      endeEl.value = '';
+      diffOut.textContent = '–';
+    }
+  }
+  tankquelleEl.addEventListener('change', updateTankquelle);
   var diffOut = document.getElementById('diff-out');
   var errEl = document.getElementById('err');
   var okEl = document.getElementById('ok');
@@ -253,6 +295,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   var exportBtn = document.getElementById('export-btn');
   var exportCsvBtn = document.getElementById('export-csv-btn');
   var exportPdfBtn = document.getElementById('export-pdf-btn');
+  updateTankquelle();
 
   var currentPhotoDataUrl = null;
   var entriesCache = [];
@@ -326,7 +369,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
   // ---------- Entwurf-Sicherung (gegen Reload-Datenverlust) ----------
   var DRAFT_KEY = 'tankprotokoll_draft_v1';
-  var draftFields = [datumEl, baustelleEl, machineEl, serialEl, mengeEl, kartennummerEl, anfangEl, endeEl];
+  var draftFields = [datumEl, baustelleEl, tankquelleEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl];
   function saveDraft(){
     try{
       var draft = {};
@@ -349,6 +392,8 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       });
       if(hasContent){
         updateDiff();
+        updateStandLabel();
+        updateTankquelle();
         okEl.textContent = 'Nicht gespeicherter Entwurf wiederhergestellt – bitte prüfen und erneut speichern.';
         okEl.hidden = false;
       }
@@ -467,7 +512,8 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       return '<div class="entry">' +
         '<div class="left">' +
           '<span class="top">' + escapeHtml(en.machine) + ' · ' + escapeHtml(en.serial) + '</span>' +
-          '<span class="bottom">' + fmtDate(en.datum) + ' — ' + escapeHtml(en.baustelle) + ' · Karte ' + escapeHtml(en.kartennummer || '–') + '</span>' +
+          '<span class="bottom">' + fmtDate(en.datum) + ' — ' + escapeHtml(en.baustelle) + ' · ' + escapeHtml(en.tankquelle || '–') + ' · Karte ' + escapeHtml(en.kartennummer || '–') +
+            (en.stand != null ? ' · ' + Number(en.stand).toLocaleString('de-DE',{maximumFractionDigits:1}) + ' ' + (en.stand_einheit || '') : '') + '</span>' +
         '</div>' +
         (photoUrl ? '<img class="thumb" src="' + photoUrl + '" alt="Lieferschein" data-full="' + photoUrl + '">' : '') +
         '<div class="amount">' + Number(en.menge).toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l</div>' +
@@ -486,8 +532,10 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   lightbox.addEventListener('click', function(){ lightbox.hidden = true; lightboxImg.src = ''; });
 
   function resetForm(){
-    baustelleEl.value = ''; machineEl.value = ''; serialEl.value = ''; mengeEl.value = '';
+    baustelleEl.value = ''; tankquelleEl.value = ''; machineEl.value = ''; serialEl.value = ''; standEl.value = ''; mengeEl.value = '';
     kartennummerEl.value = ''; anfangEl.value = ''; endeEl.value = ''; diffOut.textContent = '–';
+    updateStandLabel();
+    updateTankquelle();
     clearPhoto(); clearDraft(); baustelleEl.focus();
   }
 
@@ -497,19 +545,28 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
     var datum = datumEl.value;
     var baustelle = baustelleEl.value.trim();
+    var tankquelle = tankquelleEl.value;
+    var istTankwagen = tankquelle === 'Tankwagen';
     var machine = machineEl.value;
     var serial = serialEl.value.trim();
+    var stand = parseFloat(standEl.value);
+    var standEinheit = KM_MASCHINEN.indexOf(machine) !== -1 ? 'km' : 'h';
     var menge = parseFloat(mengeEl.value);
     var kartennummer = kartennummerEl.value.trim();
-    var anfang = parseFloat(anfangEl.value);
-    var ende = parseFloat(endeEl.value);
+    var anfang = istTankwagen ? parseFloat(anfangEl.value) : null;
+    var ende = istTankwagen ? parseFloat(endeEl.value) : null;
 
-    if(!datum || !baustelle || !machine || !serial || !isFinite(menge) || !kartennummer || !isFinite(anfang) || !isFinite(ende)){
+    if(!datum || !baustelle || !tankquelle || !machine || !serial || !isFinite(stand) || !isFinite(menge) || !kartennummer){
       errEl.textContent = 'Bitte alle Felder ausfüllen.';
       errEl.hidden = false;
       return;
     }
-    if(ende > anfang){
+    if(istTankwagen && (!isFinite(anfang) || !isFinite(ende))){
+      errEl.textContent = 'Bitte Tankwagen Anfangsmenge eintragen.';
+      errEl.hidden = false;
+      return;
+    }
+    if(istTankwagen && ende > anfang){
       errEl.textContent = 'Die Endmenge kann nicht größer als die Anfangsmenge sein.';
       errEl.hidden = false;
       return;
@@ -542,7 +599,8 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
     photoPromise.then(function(photoPath){
       return supabase.from('entries').insert({
-        datum: datum, baustelle: baustelle, machine: machine, serial: serial,
+        datum: datum, baustelle: baustelle, tankquelle: tankquelle, machine: machine, serial: serial,
+        stand: stand, stand_einheit: standEinheit,
         menge: menge, kartennummer: kartennummer, anfang: anfang, ende: ende,
         lieferschein_path: photoPath,
         erstellt: new Date().toISOString()
@@ -562,9 +620,11 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   exportBtn.addEventListener('click', function(){
     var entries = entriesCache;
     var lines = entries.map(function(en){
-      return [fmtDate(en.datum), en.baustelle, en.machine, en.serial,
-        'Menge: '+en.menge+' l', 'Karte: '+en.kartennummer, 'Anfang: '+en.anfang+' l', 'Ende: '+en.ende+' l',
-        en.lieferschein_path ? 'Beleg: ja' : 'Beleg: nein'].join(' | ');
+      return [fmtDate(en.datum), en.baustelle, 'Quelle: '+(en.tankquelle || '–'), en.machine, en.serial,
+        (en.stand_einheit === 'km' ? 'Kilometerstand: ' : 'Betriebsstunden: ') + (en.stand != null ? en.stand : '–') + ' ' + (en.stand_einheit || ''),
+        'Menge: '+en.menge+' l', 'Karte: '+en.kartennummer,
+        en.tankquelle === 'Tankwagen' ? ('Anfang: '+en.anfang+' l | Ende: '+en.ende+' l') : '',
+        en.lieferschein_path ? 'Beleg: ja' : 'Beleg: nein'].filter(Boolean).join(' | ');
     });
     var text = lines.join('\n');
     function fallbackSelect(){
@@ -589,9 +649,9 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
   exportCsvBtn.addEventListener('click', function(){
     var entries = entriesCache;
-    var header = ['Datum','Baustelle','Maschine','Seriennummer','Menge (l)','Kartennummer','Anfang (l)','Ende (l)','Beleg vorhanden'];
+    var header = ['Datum','Baustelle','Tankquelle','Maschine','Seriennummer','Kilometerstand/Betriebsstunden','Einheit','Menge (l)','Kartennummer','Anfang (l)','Ende (l)','Beleg vorhanden'];
     var rows = entries.map(function(en){
-      return [fmtDate(en.datum), en.baustelle, en.machine, en.serial, en.menge, en.kartennummer, en.anfang, en.ende, en.lieferschein_path ? 'ja' : 'nein']
+      return [fmtDate(en.datum), en.baustelle, en.tankquelle, en.machine, en.serial, en.stand, en.stand_einheit, en.menge, en.kartennummer, en.anfang, en.ende, en.lieferschein_path ? 'ja' : 'nein']
         .map(csvCell).join(';');
     });
     var csv = header.join(';') + '\n' + rows.join('\n');
@@ -629,9 +689,10 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     doc.setTextColor(0,0,0); y += 16;
 
     var cols = [
-      {label:'Datum', w:20},{label:'Baustelle', w:38},{label:'Maschine', w:26},{label:'Seriennr.', w:28},
-      {label:'Menge (l)', w:22},{label:'Kartennr.', w:24},{label:'Anfang (l)', w:24},{label:'Ende (l)', w:22},
-      {label:'Verbrauch TW (l)', w:28}
+      {label:'Datum', w:16},{label:'Baustelle', w:26},{label:'Quelle', w:20},{label:'Maschine', w:20},{label:'Seriennr.', w:20},
+      {label:'Std./km', w:18},
+      {label:'Menge (l)', w:18},{label:'Kartennr.', w:18},{label:'Anfang (l)', w:18},{label:'Ende (l)', w:16},
+      {label:'Verbrauch TW (l)', w:22}
     ];
     var rowH = 8;
 
@@ -656,11 +717,15 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         doc.setFillColor(246,243,236);
         doc.rect(marginX, y, pageW - marginX*2, rowH, 'F');
       }
-      var verbrauch = (en.anfang - en.ende);
+      var istTW = en.tankquelle === 'Tankwagen';
+      var verbrauch = istTW ? (en.anfang - en.ende) : null;
       var vals = [
-        fmtDate(en.datum), en.baustelle, en.machine, en.serial, String(en.menge),
-        en.kartennummer || '–', String(en.anfang), String(en.ende),
-        verbrauch.toLocaleString('de-DE',{maximumFractionDigits:1})
+        fmtDate(en.datum), en.baustelle, en.tankquelle || '–', en.machine, en.serial,
+        (en.stand != null ? en.stand : '–') + ' ' + (en.stand_einheit || ''),
+        String(en.menge),
+        en.kartennummer || '–',
+        istTW ? String(en.anfang) : '–', istTW ? String(en.ende) : '–',
+        verbrauch != null ? verbrauch.toLocaleString('de-DE',{maximumFractionDigits:1}) : '–'
       ];
       var x = marginX;
       vals.forEach(function(v, idx){
