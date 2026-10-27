@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tankprotokoll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: sticky top bar (logo/lang/export) + form card + live list below, single column, card-based */
+:root{
+  --bg:#f4f5f3; --surface:#ffffff; --surface-2:#eceeea; --border:#d8dbd4;
+  --ink:#1c2420; --ink-dim:#5b6660; --accent:#2f6b4f; --accent-ink:#ffffff;
+  --warn:#b9711f; --danger:#a3372c;
+  --font-display:'Space Grotesk',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151815; --surface:#1e2420; --surface-2:#262d27; --border:#343d36;
+    --ink:#eef0ea; --ink-dim:#9aa59c; --accent:#6fcf9b; --accent-ink:#0d1a12;
+    --warn:#e3a24f; --danger:#e36a5c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151815; --surface:#1e2420; --surface-2:#262d27; --border:#343d36;
+  --ink:#eef0ea; --ink-dim:#9aa59c; --accent:#6fcf9b; --accent-ink:#0d1a12;
+  --warn:#e3a24f; --danger:#e36a5c; color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-bottom:48px}
+header{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:5;
+  background:var(--bg); padding:16px 0 10px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex; align-items:baseline; gap:8px}
+.brand h1{font-size:20px; letter-spacing:-0.01em}
+.brand span{font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.08em}
+.hbtns{display:flex; gap:8px; flex-wrap:wrap}
+button{font-family:var(--font-body); cursor:pointer}
+.btn{
+  border:1px solid var(--border); background:var(--surface); color:var(--ink);
+  padding:8px 12px; border-radius:8px; font-size:13px; font-weight:600;
+}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn.sm{padding:6px 10px; font-size:12px}
+section.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  padding:20px; margin-top:18px;
+}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
+label{display:block; font-size:12px; font-weight:600; color:var(--ink-dim); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em}
+input,select{
+  width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px;
+  background:var(--surface-2); color:var(--ink); font-size:14px; font-family:var(--font-body);
+}
+input:focus,select:focus{outline:2px solid var(--accent); outline-offset:1px}
+.field{margin-bottom:12px}
+.radiogroup{display:flex; gap:10px; flex-wrap:wrap}
+.radiogroup label.opt{
+  display:flex; align-items:center; gap:6px; text-transform:none; font-weight:500; font-size:13px;
+  border:1px solid var(--border); border-radius:8px; padding:8px 12px; background:var(--surface-2); cursor:pointer; color:var(--ink);
+}
+.radiogroup input{width:auto}
+.section-title{font-size:13px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; margin:18px 0 8px}
+.section-title:first-child{margin-top:0}
+.formfoot{display:flex; justify-content:flex-end; gap:10px; margin-top:16px}
+.list-head{display:flex; align-items:center; justify-content:space-between; margin-top:28px; margin-bottom:10px; gap:10px; flex-wrap:wrap}
+.filters{display:flex; gap:8px; flex-wrap:wrap}
+.filters select,.filters input{width:auto; min-width:120px}
+.entry{
+  background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px;
+}
+.entry-top{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:baseline}
+.entry-top .machine{font-weight:700; font-family:var(--font-display); font-size:15px}
+.entry-top .date{font-family:var(--font-mono); font-size:12px; color:var(--ink-dim)}
+.entry-meta{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px; font-size:13px; color:var(--ink-dim)}
+.entry-meta b{color:var(--ink); font-weight:600; font-family:var(--font-mono)}
+.badge{font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em}
+.empty{padding:40px 16px; text-align:center; color:var(--ink-dim); font-size:14px}
+.toast{
+  position:fixed; bottom:max(16px, env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%);
+  background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:8px; font-size:13px; z-index:20;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+}
+.toast.show{opacity:1}
+.hint{font-size:12px; color:var(--ink-dim); margin-top:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><h1 id="t-title">Tankprotokoll</h1><span id="t-sub">BAUSTELLEN-ERFASSUNG</span></div>
+    <div class="hbtns">
+      <button class="btn sm" id="langBtn" type="button">RU</button>
+      <button class="btn sm" id="exportTxt" type="button">TXT</button>
+      <button class="btn sm" id="exportCsv" type="button">CSV</button>
+      <button class="btn sm" id="exportPdf" type="button">PDF</button>
+    </div>
+  </header>
+
+  <section class="card">
+    <form id="form">
+      <div class="section-title" id="t-sec-basis">Grunddaten</div>
+      <div class="grid">
+        <div class="field"><label id="l-datum">Datum</label><input type="date" id="datum" required></div>
+        <div class="field"><label id="l-mitarbeiter">Mitarbeiter</label><input type="text" id="mitarbeiter" required></div>
+        <div class="field"><label id="l-baustelle">Baustelle</label><input type="text" id="baustelle" required></div>
+        <div class="field">
+          <label id="l-maschine">Maschine</label>
+          <select id="maschine" required>
+            <option value="Bagger">Bagger</option>
+            <option value="Radlader">Radlader</option>
+            <option value="Dumper">Dumper</option>
+            <option value="LKW">LKW</option>
+            <option value="Erdrakete">Erdrakete</option>
+            <option value="Rüttelplatte">Rüttelplatte</option>
+          </select>
+        </div>
+        <div class="field"><label id="l-serien">Seriennummer</label><input type="text" id="serien" required></div>
+        <div class="field" id="hoursField"><label id="l-stunden">Betriebsstunden (vor dem Tanken)</label><input type="number" step="0.1" id="stunden"></div>
+        <div class="field" id="kmField" hidden><label id="l-km">Kilometerstand</label><input type="number" step="1" id="km"></div>
+      </div>
+
+      <div class="section-title" id="t-sec-tank">Tankquelle</div>
+      <div class="field">
+        <div class="radiogroup">
+          <label class="opt"><input type="radio" name="quelle" value="Tankwagen" checked><span id="l-tankwagen">Tankwagen / Kanister</span></label>
+          <label class="opt"><input type="radio" name="quelle" value="DKV"><span id="l-dkv">DKV-Karte (Tankstelle)</span></label>
+        </div>
+        <div class="hint" id="t-hint-quelle">Unabhängig von der Maschinenart wählbar — auch LKW können aus dem Tankwagen tanken.</div>
+      </div>
+      <div class="grid">
+        <div class="field" id="anfangField"><label id="l-anfang">Tankwagen-Anfangsmenge (L)</label><input type="number" step="0.1" id="anfang"></div>
+        <div class="field" id="endField"><label id="l-ende">Tankwagen-Endmenge (L)</label><input type="number" step="0.1" id="ende"></div>
+        <div class="field"><label id="l-menge">Betankungsmenge (L)</label><input type="number" step="0.1" id="menge" required></div>
+      </div>
+
+      <div class="formfoot">
+        <button type="submit" class="btn primary" id="t-submit">Eintrag speichern</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="list-head">
+    <h2 id="t-list-title" style="font-size:16px">Einträge</h2>
+    <div class="filters">
+      <select id="filterMaschine"><option value="" id="t-filter-all">Alle Maschinen</option></select>
+      <input type="text" id="filterBaustelle" placeholder="Baustelle filtern">
+    </div>
+  </div>
+  <div id="list"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+"use strict";
+
+// --- Supabase-Projekt "tankprotokoll" (in-terra-tiefbau-2026) ---
+const SUPABASE_URL = "https://dmlyejmiatgmidsbtfep.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6IxxzegpoiQAHenV1WcRbw_lx5B9CA9";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const MACHINES = ["Bagger","Radlader","Dumper","LKW","Erdrakete","Rüttelplatte"];
+const HOUR_MACHINES = ["Bagger","Radlader","Dumper","Erdrakete","Rüttelplatte"];
+
+const I18N = {
+  de: {
+    title:"Tankprotokoll", sub:"BAUSTELLEN-ERFASSUNG", sec_basis:"Grunddaten", sec_tank:"Tankquelle",
+    l_datum:"Datum", l_mitarbeiter:"Mitarbeiter", l_baustelle:"Baustelle", l_maschine:"Maschine",
+    l_serien:"Seriennummer", l_stunden:"Betriebsstunden (vor dem Tanken)", l_km:"Kilometerstand",
+    l_tankwagen:"Tankwagen / Kanister", l_dkv:"DKV-Karte (Tankstelle)",
+    hint_quelle:"Unabhängig von der Maschinenart wählbar — auch LKW können aus dem Tankwagen tanken.",
+    l_anfang:"Tankwagen-Anfangsmenge (L)", l_ende:"Tankwagen-Endmenge (L)", l_menge:"Betankungsmenge (L)",
+    submit:"Eintrag speichern", list_title:"Einträge", filter_all:"Alle Maschinen", filter_baustelle:"Baustelle filtern",
+    empty:"Noch keine Einträge. Das erste Formular oben ausfüllen und speichern.",
+    saved:"Eintrag gespeichert", err_save:"Speichern fehlgeschlagen", err_db:"Keine Verbindung zur Datenbank",
+    stunden_short:"Bh", km_short:"km", menge_short:"L", quelle_tankwagen:"Tankwagen", quelle_dkv:"DKV-Karte",
+    export_empty:"Keine Einträge zum Exportieren"
+  },
+  ru: {
+    title:"Журнал заправки", sub:"УЧЁТ НА ОБЪЕКТЕ", sec_basis:"Основные данные", sec_tank:"Источник топлива",
+    l_datum:"Дата", l_mitarbeiter:"Сотрудник", l_baustelle:"Объект", l_maschine:"Техника",
+    l_serien:"Серийный номер", l_stunden:"Моточасы (до заправки)", l_km:"Пробег (км)",
+    l_tankwagen:"Бензовоз / канистра", l_dkv:"Карта DKV (АЗС)",
+    hint_quelle:"Выбирается независимо от типа техники — грузовики тоже могут заправляться из бензовоза.",
+    l_anfang:"Остаток в бензовозе до (л)", l_ende:"Остаток в бензовозе после (л)", l_menge:"Количество топлива (л)",
+    submit:"Сохранить запись", list_title:"Записи", filter_all:"Вся техника", filter_baustelle:"Фильтр по объекту",
+    empty:"Записей пока нет. Заполните форму выше и сохраните.",
+    saved:"Запись сохранена", err_save:"Ошибка сохранения", err_db:"Нет соединения с базой данных",
+    stunden_short:"мч", km_short:"км", menge_short:"л", quelle_tankwagen:"Бензовоз", quelle_dkv:"Карта DKV",
+    export_empty:"Нет записей для экспорта"
+  }
+};
+
+let lang = localStorage.getItem("tp_lang") || "de";
+let entries = [];
+
+const $ = id => document.getElementById(id);
+
+function t(key){ return (I18N[lang] && I18N[lang][key]) || key; }
+
+function applyLang(){
+  document.title = t("title");
+  $("t-title").textContent = t("title");
+  $("t-sub").textContent = t("sub");
+  $("t-sec-basis").textContent = t("sec_basis");
+  $("t-sec-tank").textContent = t("sec_tank");
+  $("l-datum").textContent = t("l_datum");
+  $("l-mitarbeiter").textContent = t("l_mitarbeiter");
+  $("l-baustelle").textContent = t("l_baustelle");
+  $("l-maschine").textContent = t("l_maschine");
+  $("l-serien").textContent = t("l_serien");
+  $("l-stunden").textContent = t("l_stunden");
+  $("l-km").textContent = t("l_km");
+  $("l-tankwagen").textContent = t("l_tankwagen");
+  $("l-dkv").textContent = t("l_dkv");
+  $("t-hint-quelle").textContent = t("hint_quelle");
+  $("l-anfang").textContent = t("l_anfang");
+  $("l-ende").textContent = t("l_ende");
+  $("l-menge").textContent = t("l_menge");
+  $("t-submit").textContent = t("submit");
+  $("t-list-title").textContent = t("list_title");
+  $("t-filter-all").textContent = t("filter_all");
+  $("filterBaustelle").placeholder = t("filter_baustelle");
+  $("langBtn").textContent = lang === "de" ? "RU" : "DE";
+  renderList();
+}
+
+function toast(msg){
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"), 2200);
+}
+
+function updateConditionalFields(){
+  const machine = $("maschine").value;
+  const isHour = HOUR_MACHINES.includes(machine);
+  $("hoursField").hidden = !isHour;
+  $("kmField").hidden = isHour;
+
+  const quelle = document.querySelector('input[name="quelle"]:checked').value;
+  const isTankwagen = quelle === "Tankwagen";
+  $("anfangField").style.display = isTankwagen ? "" : "none";
+  $("endField").style.display = isTankwagen ? "" : "none";
+}
+
+function populateFilterMachines(){
+  const sel = $("filterMaschine");
+  MACHINES.forEach(m=>{
+    const o = document.createElement("option");
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  });
+}
+
+function fmtDate(iso){
+  if(!iso) return "";
+  const [y,m,d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+
+function renderList(){
+  const list = $("list");
+  const fm = $("filterMaschine").value;
+  const fb = ($("filterBaustelle").value||"").toLowerCase();
+  let rows = entries.filter(e=>{
+    if(fm && e.maschine !== fm) return false;
+    if(fb && !(e.baustelle||"").toLowerCase().includes(fb)) return false;
+    return true;
+  });
+  rows.sort((a,b)=> (b.datum||"").localeCompare(a.datum||"") || (b._ts||0)-(a._ts||0));
+
+  if(rows.length === 0){
+    list.innerHTML = `<div class="empty">${t("empty")}</div>`;
+    return;
+  }
+
+  list.innerHTML = rows.map(e=>{
+    const isHour = HOUR_MACHINES.includes(e.maschine);
+    const metrik = isHour
+      ? (e.betriebsstunden!=null && e.betriebsstunden!=="" ? `${e.betriebsstunden} ${t("stunden_short")}` : "—")
+      : (e.kilometerstand!=null && e.kilometerstand!=="" ? `${e.kilometerstand} ${t("km_short")}` : "—");
+    const quelleLabel = e.tankquelle === "DKV" ? t("quelle_dkv") : t("quelle_tankwagen");
+    const tankDetail = e.tankquelle === "Tankwagen" && (e.tankwagen_anfang!=null || e.tankwagen_ende!=null)
+      ? ` <span>(${e.tankwagen_anfang ?? "—"} → ${e.tankwagen_ende ?? "—"} L)</span>` : "";
+    return `<div class="entry">
+      <div class="entry-top">
+        <span class="machine">${esc(e.maschine)}</span>
+        <span class="date">${fmtDate(e.datum)}</span>
+      </div>
+      <div class="entry-meta">
+        <span><b>${esc(e.mitarbeiter||"—")}</b></span>
+        <span>${esc(e.baustelle||"—")}</span>
+        <span class="badge">${esc(e.seriennummer||"—")}</span>
+        <span>${metrik}</span>
+        <span>${esc(quelleLabel)}${tankDetail}</span>
+        <span><b>${e.menge_liter ?? "—"} ${t("menge_short")}</b></span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function collectFormData(){
+  const machine = $("maschine").value;
+  const isHour = HOUR_MACHINES.includes(machine);
+  const quelle = document.querySelector('input[name="quelle"]:checked').value;
+  return {
+    datum: $("datum").value,
+    mitarbeiter: $("mitarbeiter").value.trim(),
+    baustelle: $("baustelle").value.trim(),
+    maschine: machine,
+    seriennummer: $("serien").value.trim(),
+    betriebsstunden: isHour ? ($("stunden").value || null) : null,
+    kilometerstand: !isHour ? ($("km").value || null) : null,
+    tankquelle: quelle,
+    tankwagen_anfang: quelle==="Tankwagen" ? ($("anfang").value || null) : null,
+    tankwagen_ende: quelle==="Tankwagen" ? ($("ende").value || null) : null,
+    menge_liter: $("menge").value
+  };
+}
+
+async function handleSubmit(ev){
+  ev.preventDefault();
+  const data = collectFormData();
+  const btn = $("t-submit");
+  btn.disabled = true;
+  const { error } = await supabaseClient.from("entries").insert(data);
+  btn.disabled = false;
+  if(error){
+    console.error(error);
+    toast(t("err_save"));
+    return;
+  }
+  toast(t("saved"));
+  ev.target.reset();
+  $("datum").value = new Date().toISOString().slice(0,10);
+  updateConditionalFields();
+  await loadEntries();
+}
+
+function entriesToRows(){
+  const rows = entries.slice().sort((a,b)=> (a.datum||"").localeCompare(b.datum||""));
+  return rows;
+}
+
+function exportTxt(){
+  const rows = entriesToRows();
+  if(rows.length===0){ toast(t("export_empty")); return; }
+  let out = `${t("title")}\n${"=".repeat(40)}\n\n`;
+  rows.forEach(e=>{
+    const isHour = HOUR_MACHINES.includes(e.maschine);
+    out += `${fmtDate(e.datum)} — ${e.maschine} (${e.seriennummer||"-"})\n`;
+    out += `  ${t("l_mitarbeiter")}: ${e.mitarbeiter||"-"}   ${t("l_baustelle")}: ${e.baustelle||"-"}\n`;
+    out += `  ${isHour ? t("l_stunden") : t("l_km")}: ${isHour ? (e.betriebsstunden??"-") : (e.kilometerstand??"-")}\n`;
+    out += `  ${t("l_menge")}: ${e.menge_liter??"-"}  [${e.tankquelle==="DKV"?t("quelle_dkv"):t("quelle_tankwagen")}]`;
+    if(e.tankquelle==="Tankwagen") out += ` ${e.tankwagen_anfang??"-"}→${e.tankwagen_ende??"-"} L`;
+    out += `\n\n`;
+  });
+  saveFile("tankprotokoll.txt", out, "text/plain");
+}
+
+function exportCsv(){
+  const rows = entriesToRows();
+  if(rows.length===0){ toast(t("export_empty")); return; }
+  const headers = ["Datum","Mitarbeiter","Baustelle","Maschine","Seriennummer","Betriebsstunden","Kilometerstand","Tankquelle","Tankwagen_Anfang_L","Tankwagen_Ende_L","Menge_L"];
+  const lines = [headers.join(";")];
+  rows.forEach(e=>{
+    lines.push([
+      e.datum, e.mitarbeiter, e.baustelle, e.maschine, e.seriennummer,
+      e.betriebsstunden??"", e.kilometerstand??"", e.tankquelle, e.tankwagen_anfang??"", e.tankwagen_ende??"", e.menge_liter??""
+    ].map(v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`).join(";"));
+  });
+  saveFile("tankprotokoll.csv", "﻿" + lines.join("\n"), "text/csv");
+}
+
+async function exportPdf(){
+  const rows = entriesToRows();
+  if(rows.length===0){ toast(t("export_empty")); return; }
+  if(!window.jspdf){ toast(t("err_save")); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"a4" });
+  doc.setFont("helvetica","bold"); doc.setFontSize(14);
+  doc.text(t("title"), 40, 40);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9);
+  let y = 65;
+  rows.forEach(e=>{
+    const isHour = HOUR_MACHINES.includes(e.maschine);
+    if(y > 760){ doc.addPage(); y = 40; }
+    const line1 = `${fmtDate(e.datum)}  |  ${e.maschine}  |  SN ${e.seriennummer||"-"}  |  ${e.mitarbeiter||"-"}  |  ${e.baustelle||"-"}`;
+    const line2 = `${isHour ? t("l_stunden") : t("l_km")}: ${isHour ? (e.betriebsstunden??"-") : (e.kilometerstand??"-")}   ${t("l_menge")}: ${e.menge_liter??"-"} L   [${e.tankquelle==="DKV"?t("quelle_dkv"):t("quelle_tankwagen")}]`;
+    doc.text(line1, 40, y);
+    doc.text(line2, 40, y+13);
+    y += 30;
+  });
+  doc.save("tankprotokoll.pdf");
+}
+
+function saveFile(filename, content, mime){
+  const blob = new Blob([content], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+function wireEvents(){
+  $("form").addEventListener("submit", handleSubmit);
+  $("maschine").addEventListener("change", updateConditionalFields);
+  document.querySelectorAll('input[name="quelle"]').forEach(r=>r.addEventListener("change", updateConditionalFields));
+  $("langBtn").addEventListener("click", ()=>{
+    lang = lang === "de" ? "ru" : "de";
+    localStorage.setItem("tp_lang", lang);
+    applyLang();
+  });
+  $("exportTxt").addEventListener("click", exportTxt);
+  $("exportCsv").addEventListener("click", exportCsv);
+  $("exportPdf").addEventListener("click", exportPdf);
+  $("filterMaschine").addEventListener("change", renderList);
+  $("filterBaustelle").addEventListener("input", renderList);
+}
+
+async function loadEntries(){
+  const { data, error } = await supabaseClient
+    .from("entries")
+    .select("*")
+    .order("datum", { ascending: false });
+  if(error){
+    console.error(error);
+    toast(t("err_db"));
+    return;
+  }
+  entries = data || [];
+  renderList();
+}
+
+function subscribeLive(){
+  supabaseClient
+    .channel("entries-changes")
+    .on("postgres_changes", { event: "*", schema: "public", table: "entries" }, ()=>{
+      loadEntries();
+    })
+    .subscribe();
+}
+
+function init(){
+  $("datum").value = new Date().toISOString().slice(0,10);
+  populateFilterMachines();
+  wireEvents();
+  updateConditionalFields();
+  applyLang();
+  loadEntries();
+  subscribeLive();
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", init);
+}else{
+  init();
+}
+})();
+</script>
+</body>
+</html>
