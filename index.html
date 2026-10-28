@@ -3,483 +3,857 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d4621f">
 <title>Tankprotokoll</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
-/* Layout: sticky top bar (logo/lang/export) + form card + live list below, single column, card-based */
 :root{
-  --bg:#f4f5f3; --surface:#ffffff; --surface-2:#eceeea; --border:#d8dbd4;
-  --ink:#1c2420; --ink-dim:#5b6660; --accent:#2f6b4f; --accent-ink:#ffffff;
-  --warn:#b9711f; --danger:#a3372c;
-  --font-display:'Space Grotesk',system-ui,sans-serif;
-  --font-body:'IBM Plex Sans',system-ui,sans-serif;
-  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --bg:#f3f1ea; --surface:#ffffff; --ink:#1f2a24; --muted:#5c6b63;
+  --accent:#d4621f; --accent-ink:#ffffff; --line:#dedad0; --ok:#2f6b4f; --ok-bg:#e4efe8;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#151815; --surface:#1e2420; --surface-2:#262d27; --border:#343d36;
-    --ink:#eef0ea; --ink-dim:#9aa59c; --accent:#6fcf9b; --accent-ink:#0d1a12;
-    --warn:#e3a24f; --danger:#e36a5c; color-scheme: dark;
+    --bg:#1b1f1c; --surface:#242a25; --ink:#eee9df; --muted:#9fab9f;
+    --accent:#e07a35; --accent-ink:#1b1206; --line:#39403a; --ok:#7fc79c; --ok-bg:#1f3129;
+    color-scheme: dark;
   }
-}
-:root[data-theme="dark"]{
-  --bg:#151815; --surface:#1e2420; --surface-2:#262d27; --border:#343d36;
-  --ink:#eef0ea; --ink-dim:#9aa59c; --accent:#6fcf9b; --accent-ink:#0d1a12;
-  --warn:#e3a24f; --danger:#e36a5c; color-scheme: dark;
 }
 *{box-sizing:border-box}
 body{
-  margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Inter","Segoe UI",system-ui,sans-serif;
   padding-left:max(16px, env(safe-area-inset-left,0px));
   padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:20px 60px;
 }
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0}
-.wrap{max-width:860px;margin:0 auto;padding-bottom:48px}
-header{
-  position:sticky; top:env(safe-area-inset-top,0px); z-index:5;
-  background:var(--bg); padding:16px 0 10px; display:flex; align-items:center; justify-content:space-between; gap:10px;
-  border-bottom:1px solid var(--border);
+.wrap{max-width:640px;margin:0 auto}
+h1{font-size:clamp(24px,5vw,30px);font-weight:800;margin:0 0 4px;letter-spacing:-0.01em}
+.sub{color:var(--muted);margin:0 0 22px;font-size:15px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px}
+label{display:block;font-weight:700;font-size:16px;margin:18px 0 8px}
+label:first-of-type{margin-top:0}
+.hint{font-weight:400;color:var(--muted);font-size:13px;display:block;margin-top:2px}
+input, select{
+  width:100%;font-size:19px;padding:14px 14px;border-radius:10px;border:2px solid var(--line);
+  background:var(--bg);color:var(--ink);font-family:inherit;min-height:52px;
 }
-.brand{display:flex; align-items:baseline; gap:8px}
-.brand h1{font-size:20px; letter-spacing:-0.01em}
-.brand span{font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.08em}
-.hbtns{display:flex; gap:8px; flex-wrap:wrap}
-button{font-family:var(--font-body); cursor:pointer}
-.btn{
-  border:1px solid var(--border); background:var(--surface); color:var(--ink);
-  padding:8px 12px; border-radius:8px; font-size:13px; font-weight:600;
+input:focus, select:focus{outline:3px solid color-mix(in srgb, var(--accent) 45%, transparent);outline-offset:1px;border-color:var(--accent)}
+input[readonly]{background:var(--line);color:var(--muted);cursor:not-allowed}
+.row2{display:flex;gap:12px;flex-wrap:wrap}
+.row2 > div{flex:1;min-width:140px}
+#serial-wrap{margin-top:14px}
+.diff-box{
+  margin-top:18px;background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:14px 16px;
+  font-size:15px;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;gap:10px;
 }
-.btn:hover{border-color:var(--accent)}
-.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
-.btn.sm{padding:6px 10px; font-size:12px}
-section.card{
-  background:var(--surface); border:1px solid var(--border); border-radius:14px;
-  padding:20px; margin-top:18px;
+.diff-box strong{color:var(--ink);font-size:18px;font-variant-numeric:tabular-nums}
+.upload-box{
+  margin-top:4px;position:relative;border:2px dashed var(--line);border-radius:12px;background:var(--bg);
+  min-height:90px;display:flex;align-items:center;justify-content:center;
 }
-.grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-@media (max-width:520px){.grid{grid-template-columns:1fr}}
-label{display:block; font-size:12px; font-weight:600; color:var(--ink-dim); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em}
-input,select{
-  width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px;
-  background:var(--surface-2); color:var(--ink); font-size:14px; font-family:var(--font-body);
-}
-input:focus,select:focus{outline:2px solid var(--accent); outline-offset:1px}
-.field{margin-bottom:12px}
-.radiogroup{display:flex; gap:10px; flex-wrap:wrap}
-.radiogroup label.opt{
-  display:flex; align-items:center; gap:6px; text-transform:none; font-weight:500; font-size:13px;
-  border:1px solid var(--border); border-radius:8px; padding:8px 12px; background:var(--surface-2); cursor:pointer; color:var(--ink);
-}
-.radiogroup input{width:auto}
-.section-title{font-size:13px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; margin:18px 0 8px}
-.section-title:first-child{margin-top:0}
-.formfoot{display:flex; justify-content:flex-end; gap:10px; margin-top:16px}
-.list-head{display:flex; align-items:center; justify-content:space-between; margin-top:28px; margin-bottom:10px; gap:10px; flex-wrap:wrap}
-.filters{display:flex; gap:8px; flex-wrap:wrap}
-.filters select,.filters input{width:auto; min-width:120px}
-.entry{
-  background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px;
-}
-.entry-top{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:baseline}
-.entry-top .machine{font-weight:700; font-family:var(--font-display); font-size:15px}
-.entry-top .date{font-family:var(--font-mono); font-size:12px; color:var(--ink-dim)}
-.entry-meta{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px; font-size:13px; color:var(--ink-dim)}
-.entry-meta b{color:var(--ink); font-weight:600; font-family:var(--font-mono)}
-.badge{font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em}
-.empty{padding:40px 16px; text-align:center; color:var(--ink-dim); font-size:14px}
-.toast{
-  position:fixed; bottom:max(16px, env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%);
-  background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:8px; font-size:13px; z-index:20;
-  opacity:0; pointer-events:none; transition:opacity .2s;
-}
-.toast.show{opacity:1}
-.hint{font-size:12px; color:var(--ink-dim); margin-top:4px}
+.upload-box input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;min-height:90px}
+.upload-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font-size:14px;font-weight:600;padding:18px;text-align:center;pointer-events:none}
+.upload-icon{font-size:26px}
+.upload-preview{width:100%;padding:12px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.upload-preview img{max-width:100%;max-height:220px;border-radius:8px;display:block}
+.upload-remove{position:relative;z-index:2;background:transparent;border:2px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.submit{width:100%;margin-top:22px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:12px;padding:18px;font-size:19px;font-weight:800;cursor:pointer}
+.submit:disabled{opacity:.6;cursor:default}
+.submit:active{transform:scale(.99)}
+.msg{margin-top:12px;background:var(--ok-bg);color:var(--ok);border-radius:10px;padding:12px 14px;font-weight:700;font-size:15px;text-align:center}
+.msg[hidden]{display:none}
+.err{color:#c0392b;font-weight:700;font-size:14px;margin-top:8px}
+.err[hidden]{display:none}
+h2{font-size:18px;margin:0 0 12px;font-weight:800}
+.entry{display:flex;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);font-size:15px}
+.entry:last-child{border-bottom:none}
+.entry .left{display:flex;flex-direction:column;gap:3px;min-width:0}
+.entry .left .top{font-weight:700}
+.entry .left .bottom{color:var(--muted);font-size:13px}
+.entry .amount{font-weight:800;font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.entry .thumb{width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:pointer;flex-shrink:0}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50}
+.lightbox[hidden]{display:none}
+.lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 0}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.summary-tile{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.summary-tile .m-name{font-size:14px;font-weight:700;color:var(--muted)}
+.summary-tile .m-total{font-size:22px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.summary-tile .m-count{font-size:12px;color:var(--muted);margin-top:2px}
+.export-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.export-btn{flex:1;min-width:160px;background:transparent;border:2px solid var(--line);color:var(--ink);border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}
+.topbtns{display:flex;gap:8px;align-items:center}
+.logout-btn,.lang-btn{background:transparent;border:2px solid var(--line);color:var(--muted);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer}
+.lang-btn.active{border-color:var(--accent);color:var(--accent)}
+#login-screen{max-width:400px;margin:60px auto 0}
+#login-screen h1{text-align:center}
+#login-screen .sub{text-align:center}
+#login-screen .topbtns{justify-content:center;margin-bottom:18px}
+#app{display:none}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="brand"><h1 id="t-title">Tankprotokoll</h1><span id="t-sub">BAUSTELLEN-ERFASSUNG</span></div>
-    <div class="hbtns">
-      <button class="btn sm" id="langBtn" type="button">RU</button>
-      <button class="btn sm" id="exportTxt" type="button">TXT</button>
-      <button class="btn sm" id="exportCsv" type="button">CSV</button>
-      <button class="btn sm" id="exportPdf" type="button">PDF</button>
-    </div>
-  </header>
 
-  <section class="card">
-    <form id="form">
-      <div class="section-title" id="t-sec-basis">Grunddaten</div>
-      <div class="grid">
-        <div class="field"><label id="l-datum">Datum</label><input type="date" id="datum" required></div>
-        <div class="field"><label id="l-mitarbeiter">Mitarbeiter</label><input type="text" id="mitarbeiter" required></div>
-        <div class="field"><label id="l-baustelle">Baustelle</label><input type="text" id="baustelle" required></div>
-        <div class="field">
-          <label id="l-maschine">Maschine</label>
-          <select id="maschine" required>
-            <option value="Bagger">Bagger</option>
-            <option value="Radlader">Radlader</option>
-            <option value="Dumper">Dumper</option>
-            <option value="LKW">LKW</option>
-            <option value="Erdrakete">Erdrakete</option>
-            <option value="Rüttelplatte">Rüttelplatte</option>
-          </select>
-        </div>
-        <div class="field"><label id="l-serien">Seriennummer</label><input type="text" id="serien" required></div>
-        <div class="field" id="hoursField"><label id="l-stunden">Betriebsstunden (vor dem Tanken)</label><input type="number" step="0.1" id="stunden"></div>
-        <div class="field" id="kmField" hidden><label id="l-km">Kilometerstand</label><input type="number" step="1" id="km"></div>
-      </div>
-
-      <div class="section-title" id="t-sec-tank">Tankquelle</div>
-      <div class="field">
-        <div class="radiogroup">
-          <label class="opt"><input type="radio" name="quelle" value="Tankwagen" checked><span id="l-tankwagen">Tankwagen / Kanister</span></label>
-          <label class="opt"><input type="radio" name="quelle" value="DKV"><span id="l-dkv">DKV-Karte (Tankstelle)</span></label>
-        </div>
-        <div class="hint" id="t-hint-quelle">Unabhängig von der Maschinenart wählbar — auch LKW können aus dem Tankwagen tanken.</div>
-      </div>
-      <div class="grid">
-        <div class="field" id="anfangField"><label id="l-anfang">Tankwagen-Anfangsmenge (L)</label><input type="number" step="0.1" id="anfang"></div>
-        <div class="field" id="endField"><label id="l-ende">Tankwagen-Endmenge (L)</label><input type="number" step="0.1" id="ende"></div>
-        <div class="field"><label id="l-menge">Betankungsmenge (L)</label><input type="number" step="0.1" id="menge" required></div>
-      </div>
-
-      <div class="formfoot">
-        <button type="submit" class="btn primary" id="t-submit">Eintrag speichern</button>
-      </div>
+<div class="wrap" id="login-screen">
+  <div class="topbtns">
+    <button class="lang-btn" data-lang="de">DE</button>
+    <button class="lang-btn" data-lang="ru">RU</button>
+  </div>
+  <h1>⛽ Tankprotokoll</h1>
+  <p class="sub" data-i18n="loginSub">Bitte anmelden</p>
+  <div class="card">
+    <form id="login-form">
+      <label for="login-email" data-i18n="loginEmail">E-Mail</label>
+      <input type="email" id="login-email" required autocomplete="username">
+      <label for="login-password" data-i18n="loginPassword">Passwort</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+      <p class="err" id="login-err" hidden></p>
+      <button type="submit" class="submit" data-i18n="loginBtn">Anmelden</button>
     </form>
-  </section>
+  </div>
+</div>
 
-  <div class="list-head">
-    <h2 id="t-list-title" style="font-size:16px">Einträge</h2>
-    <div class="filters">
-      <select id="filterMaschine"><option value="" id="t-filter-all">Alle Maschinen</option></select>
-      <input type="text" id="filterBaustelle" placeholder="Baustelle filtern">
+<div class="wrap" id="app">
+  <div class="topbar">
+    <div>
+      <h1>⛽ Tankprotokoll</h1>
+      <p class="sub" style="margin:0" data-i18n="appSub">Bitte nach jeder Betankung ausfüllen.</p>
+    </div>
+    <div class="topbtns">
+      <button class="lang-btn" data-lang="de">DE</button>
+      <button class="lang-btn" data-lang="ru">RU</button>
+      <button class="logout-btn" id="logout-btn" data-i18n="logout">Abmelden</button>
     </div>
   </div>
-  <div id="list"></div>
-</div>
-<div class="toast" id="toast"></div>
 
+  <div class="card">
+    <form id="form">
+      <label for="mitarbeiter" data-i18n="lMitarbeiter">Name (Mitarbeiter)</label>
+      <input type="text" id="mitarbeiter" required>
+
+      <label for="datum" data-i18n="lDatum">Datum</label>
+      <input type="date" id="datum" required>
+
+      <label for="baustelle" data-i18n="lBaustelle">Baustelle</label>
+      <input type="text" id="baustelle" placeholder="z. B. Hannover, Dragonerstraße" required>
+
+      <label for="tankquelle" data-i18n="lTankquelle">Tankquelle</label>
+      <select id="tankquelle" required>
+        <option value="" disabled selected data-i18n="optChoose">Bitte auswählen …</option>
+        <option value="Tankwagen" data-i18n="optTankwagen">Tankwagen</option>
+        <option value="DKV" data-i18n="optDKV">DKV-Karte</option>
+      </select>
+
+      <label for="machine" data-i18n="lMaschine">Maschine</label>
+      <select id="machine" required>
+        <option value="" disabled selected data-i18n="optChoose">Bitte auswählen …</option>
+        <option value="Bagger" data-i18n="optBagger">Bagger</option>
+        <option value="Radlader" data-i18n="optRadlader">Radlader</option>
+        <option value="Dumper" data-i18n="optDumper">Dumper</option>
+        <option value="LKW" data-i18n="optLKW">LKW</option>
+        <option value="Erdrakete" data-i18n="optErdrakete">Erdrakete</option>
+        <option value="Rüttelplatte" data-i18n="optRuettelplatte">Rüttelplatte</option>
+      </select>
+
+      <div id="serial-wrap">
+        <label for="serial" data-i18n="lSeriennummer">Seriennummer der Maschine</label>
+        <input type="text" id="serial" placeholder="z. B. RP-2024-118" required>
+      </div>
+
+      <div id="stand-wrap">
+        <label for="stand" id="stand-label" data-i18n="lBetriebsstunden">Betriebsstunden vor dem Tanken</label>
+        <input type="text" inputmode="decimal" id="stand" placeholder="z. B. 1234" required>
+      </div>
+
+      <label for="menge" data-i18n="lMenge">Betankungsmenge (Liter)</label>
+      <input type="text" inputmode="decimal" id="menge" placeholder="z. B. 15" required>
+
+      <label for="kartennummer" data-i18n="lKartennummer">Kartennummer (Tankkarte)</label>
+      <input type="text" id="kartennummer" inputmode="numeric" placeholder="z. B. 1234" required>
+
+      <div class="row2" id="tankwagen-wrap">
+        <div>
+          <label for="anfang" data-i18n="lAnfang">Tankwagen Anfang (Liter)</label>
+          <input type="text" inputmode="decimal" id="anfang" placeholder="z. B. 500">
+        </div>
+        <div>
+          <label for="ende" data-i18n="lEnde">Tankwagen Ende (Liter)<span class="hint" data-i18n="lEndeHint">wird automatisch berechnet</span></label>
+          <input type="text" id="ende" placeholder="–" readonly tabindex="-1">
+        </div>
+      </div>
+
+      <div class="diff-box" id="diff-box">
+        <span data-i18n="diffLabel">Verbrauch Tankwagen (Anfang − Menge)</span>
+        <strong id="diff-out">–</strong>
+      </div>
+
+      <label for="lieferschein" data-i18n="lLieferschein">Lieferschein (Foto)</label>
+      <div class="upload-box" id="upload-box">
+        <input type="file" id="lieferschein" accept="image/*" capture="environment">
+        <div id="upload-placeholder" class="upload-placeholder">
+          <span class="upload-icon">📷</span>
+          <span data-i18n="uploadHint">Foto aufnehmen oder auswählen</span>
+        </div>
+        <div id="upload-preview" class="upload-preview" hidden>
+          <img id="upload-img" alt="Lieferschein Vorschau">
+          <button type="button" id="upload-remove" class="upload-remove" data-i18n="uploadRemove">Entfernen</button>
+        </div>
+      </div>
+
+      <p class="err" id="err" hidden></p>
+      <button type="submit" class="submit" data-i18n="saveBtn">Eintrag speichern</button>
+      <p class="msg" id="ok" hidden></p>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="summaryTitle">Verbrauch pro Maschine</h2>
+    <div id="summary"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="listTitle">Letzte Einträge</h2>
+    <div id="list"></div>
+    <div class="export-row">
+      <button class="export-btn" id="export-btn" hidden data-i18n="exportText">Als Text kopieren</button>
+      <button class="export-btn" id="export-csv-btn" hidden data-i18n="exportCsv">Als CSV kopieren (für Excel)</button>
+      <button class="export-btn" id="export-pdf-btn" hidden data-i18n="exportPdf">Als PDF speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <img id="lightbox-img" alt="Lieferschein groß">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (function(){
-"use strict";
+  // ====== Supabase-Projekt "tankprotokoll" ======
+  var SUPABASE_URL = 'https://dmlyejmiatgmidsbtfep.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_6IxxzegpoiQAHenV1WcRbw_lx5B9CA9';
+  var BUCKET = 'lieferscheine';
+  // ===============================================
 
-// --- Supabase-Projekt "tankprotokoll" (in-terra-tiefbau-2026) ---
-const SUPABASE_URL = "https://dmlyejmiatgmidsbtfep.supabase.co";
-const SUPABASE_KEY = "sb_publishable_6IxxzegpoiQAHenV1WcRbw_lx5B9CA9";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const MACHINES = ["Bagger","Radlader","Dumper","LKW","Erdrakete","Rüttelplatte"];
-const HOUR_MACHINES = ["Bagger","Radlader","Dumper","Erdrakete","Rüttelplatte"];
-
-const I18N = {
-  de: {
-    title:"Tankprotokoll", sub:"BAUSTELLEN-ERFASSUNG", sec_basis:"Grunddaten", sec_tank:"Tankquelle",
-    l_datum:"Datum", l_mitarbeiter:"Mitarbeiter", l_baustelle:"Baustelle", l_maschine:"Maschine",
-    l_serien:"Seriennummer", l_stunden:"Betriebsstunden (vor dem Tanken)", l_km:"Kilometerstand",
-    l_tankwagen:"Tankwagen / Kanister", l_dkv:"DKV-Karte (Tankstelle)",
-    hint_quelle:"Unabhängig von der Maschinenart wählbar — auch LKW können aus dem Tankwagen tanken.",
-    l_anfang:"Tankwagen-Anfangsmenge (L)", l_ende:"Tankwagen-Endmenge (L)", l_menge:"Betankungsmenge (L)",
-    submit:"Eintrag speichern", list_title:"Einträge", filter_all:"Alle Maschinen", filter_baustelle:"Baustelle filtern",
-    empty:"Noch keine Einträge. Das erste Formular oben ausfüllen und speichern.",
-    saved:"Eintrag gespeichert", err_save:"Speichern fehlgeschlagen", err_db:"Keine Verbindung zur Datenbank",
-    stunden_short:"Bh", km_short:"km", menge_short:"L", quelle_tankwagen:"Tankwagen", quelle_dkv:"DKV-Karte",
-    export_empty:"Keine Einträge zum Exportieren"
-  },
-  ru: {
-    title:"Журнал заправки", sub:"УЧЁТ НА ОБЪЕКТЕ", sec_basis:"Основные данные", sec_tank:"Источник топлива",
-    l_datum:"Дата", l_mitarbeiter:"Сотрудник", l_baustelle:"Объект", l_maschine:"Техника",
-    l_serien:"Серийный номер", l_stunden:"Моточасы (до заправки)", l_km:"Пробег (км)",
-    l_tankwagen:"Бензовоз / канистра", l_dkv:"Карта DKV (АЗС)",
-    hint_quelle:"Выбирается независимо от типа техники — грузовики тоже могут заправляться из бензовоза.",
-    l_anfang:"Остаток в бензовозе до (л)", l_ende:"Остаток в бензовозе после (л)", l_menge:"Количество топлива (л)",
-    submit:"Сохранить запись", list_title:"Записи", filter_all:"Вся техника", filter_baustelle:"Фильтр по объекту",
-    empty:"Записей пока нет. Заполните форму выше и сохраните.",
-    saved:"Запись сохранена", err_save:"Ошибка сохранения", err_db:"Нет соединения с базой данных",
-    stunden_short:"мч", km_short:"км", menge_short:"л", quelle_tankwagen:"Бензовоз", quelle_dkv:"Карта DKV",
-    export_empty:"Нет записей для экспорта"
-  }
-};
-
-let lang = localStorage.getItem("tp_lang") || "de";
-let entries = [];
-
-const $ = id => document.getElementById(id);
-
-function t(key){ return (I18N[lang] && I18N[lang][key]) || key; }
-
-function applyLang(){
-  document.title = t("title");
-  $("t-title").textContent = t("title");
-  $("t-sub").textContent = t("sub");
-  $("t-sec-basis").textContent = t("sec_basis");
-  $("t-sec-tank").textContent = t("sec_tank");
-  $("l-datum").textContent = t("l_datum");
-  $("l-mitarbeiter").textContent = t("l_mitarbeiter");
-  $("l-baustelle").textContent = t("l_baustelle");
-  $("l-maschine").textContent = t("l_maschine");
-  $("l-serien").textContent = t("l_serien");
-  $("l-stunden").textContent = t("l_stunden");
-  $("l-km").textContent = t("l_km");
-  $("l-tankwagen").textContent = t("l_tankwagen");
-  $("l-dkv").textContent = t("l_dkv");
-  $("t-hint-quelle").textContent = t("hint_quelle");
-  $("l-anfang").textContent = t("l_anfang");
-  $("l-ende").textContent = t("l_ende");
-  $("l-menge").textContent = t("l_menge");
-  $("t-submit").textContent = t("submit");
-  $("t-list-title").textContent = t("list_title");
-  $("t-filter-all").textContent = t("filter_all");
-  $("filterBaustelle").placeholder = t("filter_baustelle");
-  $("langBtn").textContent = lang === "de" ? "RU" : "DE";
-  renderList();
-}
-
-function toast(msg){
-  const el = $("toast");
-  el.textContent = msg;
-  el.classList.add("show");
-  setTimeout(()=>el.classList.remove("show"), 2200);
-}
-
-function updateConditionalFields(){
-  const machine = $("maschine").value;
-  const isHour = HOUR_MACHINES.includes(machine);
-  $("hoursField").hidden = !isHour;
-  $("kmField").hidden = isHour;
-
-  const quelle = document.querySelector('input[name="quelle"]:checked').value;
-  const isTankwagen = quelle === "Tankwagen";
-  $("anfangField").style.display = isTankwagen ? "" : "none";
-  $("endField").style.display = isTankwagen ? "" : "none";
-}
-
-function populateFilterMachines(){
-  const sel = $("filterMaschine");
-  MACHINES.forEach(m=>{
-    const o = document.createElement("option");
-    o.value = m; o.textContent = m;
-    sel.appendChild(o);
-  });
-}
-
-function fmtDate(iso){
-  if(!iso) return "";
-  const [y,m,d] = iso.split("-");
-  return `${d}.${m}.${y}`;
-}
-
-function renderList(){
-  const list = $("list");
-  const fm = $("filterMaschine").value;
-  const fb = ($("filterBaustelle").value||"").toLowerCase();
-  let rows = entries.filter(e=>{
-    if(fm && e.maschine !== fm) return false;
-    if(fb && !(e.baustelle||"").toLowerCase().includes(fb)) return false;
-    return true;
-  });
-  rows.sort((a,b)=> (b.datum||"").localeCompare(a.datum||"") || (b._ts||0)-(a._ts||0));
-
-  if(rows.length === 0){
-    list.innerHTML = `<div class="empty">${t("empty")}</div>`;
-    return;
-  }
-
-  list.innerHTML = rows.map(e=>{
-    const isHour = HOUR_MACHINES.includes(e.maschine);
-    const metrik = isHour
-      ? (e.betriebsstunden!=null && e.betriebsstunden!=="" ? `${e.betriebsstunden} ${t("stunden_short")}` : "—")
-      : (e.kilometerstand!=null && e.kilometerstand!=="" ? `${e.kilometerstand} ${t("km_short")}` : "—");
-    const quelleLabel = e.tankquelle === "DKV" ? t("quelle_dkv") : t("quelle_tankwagen");
-    const tankDetail = e.tankquelle === "Tankwagen" && (e.tankwagen_anfang!=null || e.tankwagen_ende!=null)
-      ? ` <span>(${e.tankwagen_anfang ?? "—"} → ${e.tankwagen_ende ?? "—"} L)</span>` : "";
-    return `<div class="entry">
-      <div class="entry-top">
-        <span class="machine">${esc(e.maschine)}</span>
-        <span class="date">${fmtDate(e.datum)}</span>
-      </div>
-      <div class="entry-meta">
-        <span><b>${esc(e.mitarbeiter||"—")}</b></span>
-        <span>${esc(e.baustelle||"—")}</span>
-        <span class="badge">${esc(e.seriennummer||"—")}</span>
-        <span>${metrik}</span>
-        <span>${esc(quelleLabel)}${tankDetail}</span>
-        <span><b>${e.menge_liter ?? "—"} ${t("menge_short")}</b></span>
-      </div>
-    </div>`;
-  }).join("");
-}
-
-function esc(s){
-  return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-
-function collectFormData(){
-  const machine = $("maschine").value;
-  const isHour = HOUR_MACHINES.includes(machine);
-  const quelle = document.querySelector('input[name="quelle"]:checked').value;
-  return {
-    datum: $("datum").value,
-    mitarbeiter: $("mitarbeiter").value.trim(),
-    baustelle: $("baustelle").value.trim(),
-    maschine: machine,
-    seriennummer: $("serien").value.trim(),
-    betriebsstunden: isHour ? ($("stunden").value || null) : null,
-    kilometerstand: !isHour ? ($("km").value || null) : null,
-    tankquelle: quelle,
-    tankwagen_anfang: quelle==="Tankwagen" ? ($("anfang").value || null) : null,
-    tankwagen_ende: quelle==="Tankwagen" ? ($("ende").value || null) : null,
-    menge_liter: $("menge").value
+  // ---------- Sprache (DE/RU) ----------
+  var L = {
+    loginSub:{de:'Bitte anmelden', ru:'Bitte anmelden / Войти'},
+    loginEmail:{de:'E-Mail', ru:'E-Mail'},
+    loginPassword:{de:'Passwort', ru:'Пароль'},
+    loginBtn:{de:'Anmelden', ru:'Войти'},
+    appSub:{de:'Bitte nach jeder Betankung ausfüllen.', ru:'Bitte nach jeder Betankung ausfüllen / Заполняйте после каждой заправки.'},
+    logout:{de:'Abmelden', ru:'Выйти'},
+    lMitarbeiter:{de:'Name (Mitarbeiter)', ru:'Имя (сотрудник)'},
+    lDatum:{de:'Datum', ru:'Дата'},
+    lBaustelle:{de:'Baustelle', ru:'Объект / стройка'},
+    lTankquelle:{de:'Tankquelle', ru:'Источник топлива'},
+    optChoose:{de:'Bitte auswählen …', ru:'Выберите …'},
+    optTankwagen:{de:'Tankwagen', ru:'Tankwagen (бочка/канистра)'},
+    optDKV:{de:'DKV-Karte', ru:'DKV-карта (АЗС)'},
+    lMaschine:{de:'Maschine', ru:'Техника'},
+    optBagger:{de:'Bagger', ru:'Экскаватор (Bagger)'},
+    optRadlader:{de:'Radlader', ru:'Погрузчик (Radlader)'},
+    optDumper:{de:'Dumper', ru:'Самосвал (Dumper)'},
+    optLKW:{de:'LKW', ru:'Грузовик (LKW)'},
+    optErdrakete:{de:'Erdrakete', ru:'Прокольная установка (Erdrakete)'},
+    optRuettelplatte:{de:'Rüttelplatte', ru:'Виброплита'},
+    lSeriennummer:{de:'Seriennummer der Maschine', ru:'Серийный номер техники'},
+    lBetriebsstunden:{de:'Betriebsstunden vor dem Tanken', ru:'Моточасы перед заправкой'},
+    lKilometerstand:{de:'Kilometerstand aktuell', ru:'Текущий пробег (км)'},
+    lMenge:{de:'Betankungsmenge (Liter)', ru:'Количество топлива (литры)'},
+    lKartennummer:{de:'Kartennummer (Tankkarte)', ru:'Номер карты'},
+    lAnfang:{de:'Tankwagen Anfang (Liter)', ru:'Остаток в бочке до (литры)'},
+    lEnde:{de:'Tankwagen Ende (Liter)', ru:'Остаток в бочке после (литры)'},
+    lEndeHint:{de:'wird automatisch berechnet', ru:'рассчитывается автоматически'},
+    diffLabel:{de:'Verbrauch Tankwagen (Anfang − Menge)', ru:'Расход из бочки (до − количество)'},
+    lLieferschein:{de:'Lieferschein (Foto)', ru:'Накладная (фото)'},
+    uploadHint:{de:'Foto aufnehmen oder auswählen', ru:'Сделать фото или выбрать файл'},
+    uploadRemove:{de:'Entfernen', ru:'Удалить'},
+    saveBtn:{de:'Eintrag speichern', ru:'Сохранить запись'},
+    summaryTitle:{de:'Verbrauch pro Maschine', ru:'Расход по технике'},
+    listTitle:{de:'Letzte Einträge', ru:'Последние записи'},
+    exportText:{de:'Als Text kopieren', ru:'Копировать как текст'},
+    exportCsv:{de:'Als CSV kopieren (für Excel)', ru:'Копировать как CSV (для Excel)'},
+    exportPdf:{de:'Als PDF speichern', ru:'Сохранить как PDF'},
+    savedMsg:{de:'✓ Eintrag gespeichert', ru:'✓ Запись сохранена'},
+    draftMsg:{de:'Nicht gespeicherter Entwurf wiederhergestellt – bitte prüfen und erneut speichern.', ru:'Восстановлен несохранённый черновик – проверьте и сохраните снова.'},
+    fillAll:{de:'Bitte alle Felder ausfüllen.', ru:'Пожалуйста, заполните все поля.'},
+    needAnfang:{de:'Bitte Tankwagen Anfangsmenge eintragen.', ru:'Укажите остаток в бочке до заправки.'},
+    endeTooBig:{de:'Die Endmenge kann nicht größer als die Anfangsmenge sein.', ru:'Остаток после заправки не может быть больше, чем до заправки.'},
+    saving:{de:'Wird gespeichert …', ru:'Сохранение …'},
+    saveFailed:{de:'Speichern fehlgeschlagen: ', ru:'Ошибка сохранения: '},
+    saveFailedRetry:{de:'Speichern fehlgeschlagen. Bitte erneut versuchen.', ru:'Ошибка сохранения. Попробуйте ещё раз.'},
+    loadFailed:{de:'Einträge konnten nicht geladen werden: ', ru:'Не удалось загрузить записи: '},
+    loginFailed:{de:'Anmeldung fehlgeschlagen: ', ru:'Ошибка входа: '},
+    noData:{de:'Noch keine Daten für eine Auswertung.', ru:'Пока нет данных для анализа.'},
+    noEntries:{de:'Noch keine Einträge vorhanden.', ru:'Записей пока нет.'},
+    copied:{de:'Kopiert ✓', ru:'Скопировано ✓'},
+    pdfFail:{de:'PDF-Werkzeug konnte nicht geladen werden. Bitte Seite neu laden.', ru:'Не удалось загрузить PDF-инструмент. Обновите страницу.'}
   };
-}
-
-async function handleSubmit(ev){
-  ev.preventDefault();
-  const data = collectFormData();
-  const btn = $("t-submit");
-  btn.disabled = true;
-  const { error } = await supabaseClient.from("entries").insert(data);
-  btn.disabled = false;
-  if(error){
-    console.error(error);
-    toast(t("err_save"));
-    return;
+  var currentLang = (localStorage.getItem('tankprotokoll_lang') || 'de');
+  function t(key){ return (L[key] && L[key][currentLang]) || (L[key] && L[key].de) || key; }
+  function applyLang(){
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-lang') === currentLang);
+    });
+    updateStandLabel();
   }
-  toast(t("saved"));
-  ev.target.reset();
-  $("datum").value = new Date().toISOString().slice(0,10);
-  updateConditionalFields();
-  await loadEntries();
-}
-
-function entriesToRows(){
-  const rows = entries.slice().sort((a,b)=> (a.datum||"").localeCompare(b.datum||""));
-  return rows;
-}
-
-function exportTxt(){
-  const rows = entriesToRows();
-  if(rows.length===0){ toast(t("export_empty")); return; }
-  let out = `${t("title")}\n${"=".repeat(40)}\n\n`;
-  rows.forEach(e=>{
-    const isHour = HOUR_MACHINES.includes(e.maschine);
-    out += `${fmtDate(e.datum)} — ${e.maschine} (${e.seriennummer||"-"})\n`;
-    out += `  ${t("l_mitarbeiter")}: ${e.mitarbeiter||"-"}   ${t("l_baustelle")}: ${e.baustelle||"-"}\n`;
-    out += `  ${isHour ? t("l_stunden") : t("l_km")}: ${isHour ? (e.betriebsstunden??"-") : (e.kilometerstand??"-")}\n`;
-    out += `  ${t("l_menge")}: ${e.menge_liter??"-"}  [${e.tankquelle==="DKV"?t("quelle_dkv"):t("quelle_tankwagen")}]`;
-    if(e.tankquelle==="Tankwagen") out += ` ${e.tankwagen_anfang??"-"}→${e.tankwagen_ende??"-"} L`;
-    out += `\n\n`;
+  document.querySelectorAll('.lang-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      currentLang = b.getAttribute('data-lang');
+      localStorage.setItem('tankprotokoll_lang', currentLang);
+      applyLang();
+    });
   });
-  saveFile("tankprotokoll.txt", out, "text/plain");
-}
 
-function exportCsv(){
-  const rows = entriesToRows();
-  if(rows.length===0){ toast(t("export_empty")); return; }
-  const headers = ["Datum","Mitarbeiter","Baustelle","Maschine","Seriennummer","Betriebsstunden","Kilometerstand","Tankquelle","Tankwagen_Anfang_L","Tankwagen_Ende_L","Menge_L"];
-  const lines = [headers.join(";")];
-  rows.forEach(e=>{
-    lines.push([
-      e.datum, e.mitarbeiter, e.baustelle, e.maschine, e.seriennummer,
-      e.betriebsstunden??"", e.kilometerstand??"", e.tankquelle, e.tankwagen_anfang??"", e.tankwagen_ende??"", e.menge_liter??""
-    ].map(v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`).join(";"));
-  });
-  saveFile("tankprotokoll.csv", "﻿" + lines.join("\n"), "text/csv");
-}
+  var loginScreen = document.getElementById('login-screen');
+  var appEl = document.getElementById('app');
+  var loginForm = document.getElementById('login-form');
+  var loginEmail = document.getElementById('login-email');
+  var loginPassword = document.getElementById('login-password');
+  var loginErr = document.getElementById('login-err');
+  var logoutBtn = document.getElementById('logout-btn');
 
-async function exportPdf(){
-  const rows = entriesToRows();
-  if(rows.length===0){ toast(t("export_empty")); return; }
-  if(!window.jspdf){ toast(t("err_save")); return; }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit:"pt", format:"a4" });
-  doc.setFont("helvetica","bold"); doc.setFontSize(14);
-  doc.text(t("title"), 40, 40);
-  doc.setFont("helvetica","normal"); doc.setFontSize(9);
-  let y = 65;
-  rows.forEach(e=>{
-    const isHour = HOUR_MACHINES.includes(e.maschine);
-    if(y > 760){ doc.addPage(); y = 40; }
-    const line1 = `${fmtDate(e.datum)}  |  ${e.maschine}  |  SN ${e.seriennummer||"-"}  |  ${e.mitarbeiter||"-"}  |  ${e.baustelle||"-"}`;
-    const line2 = `${isHour ? t("l_stunden") : t("l_km")}: ${isHour ? (e.betriebsstunden??"-") : (e.kilometerstand??"-")}   ${t("l_menge")}: ${e.menge_liter??"-"} L   [${e.tankquelle==="DKV"?t("quelle_dkv"):t("quelle_tankwagen")}]`;
-    doc.text(line1, 40, y);
-    doc.text(line2, 40, y+13);
-    y += 30;
-  });
-  doc.save("tankprotokoll.pdf");
-}
+  var form = document.getElementById('form');
+  var mitarbeiterEl = document.getElementById('mitarbeiter');
+  var datumEl = document.getElementById('datum');
+  var baustelleEl = document.getElementById('baustelle');
+  var tankquelleEl = document.getElementById('tankquelle');
+  var tankwagenWrap = document.getElementById('tankwagen-wrap');
+  var diffBox = document.getElementById('diff-box');
+  var machineEl = document.getElementById('machine');
+  var mengeEl = document.getElementById('menge');
+  var kartennummerEl = document.getElementById('kartennummer');
+  var lieferscheinInput = document.getElementById('lieferschein');
+  var uploadPlaceholder = document.getElementById('upload-placeholder');
+  var uploadPreview = document.getElementById('upload-preview');
+  var uploadImg = document.getElementById('upload-img');
+  var uploadRemove = document.getElementById('upload-remove');
+  var anfangEl = document.getElementById('anfang');
+  var endeEl = document.getElementById('ende');
+  var serialEl = document.getElementById('serial');
+  var standEl = document.getElementById('stand');
+  var standLabelEl = document.getElementById('stand-label');
 
-function saveFile(filename, content, mime){
-  const blob = new Blob([content], {type: mime});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
-}
-
-function wireEvents(){
-  $("form").addEventListener("submit", handleSubmit);
-  $("maschine").addEventListener("change", updateConditionalFields);
-  document.querySelectorAll('input[name="quelle"]').forEach(r=>r.addEventListener("change", updateConditionalFields));
-  $("langBtn").addEventListener("click", ()=>{
-    lang = lang === "de" ? "ru" : "de";
-    localStorage.setItem("tp_lang", lang);
-    applyLang();
-  });
-  $("exportTxt").addEventListener("click", exportTxt);
-  $("exportCsv").addEventListener("click", exportCsv);
-  $("exportPdf").addEventListener("click", exportPdf);
-  $("filterMaschine").addEventListener("change", renderList);
-  $("filterBaustelle").addEventListener("input", renderList);
-}
-
-async function loadEntries(){
-  const { data, error } = await supabaseClient
-    .from("entries")
-    .select("*")
-    .order("datum", { ascending: false });
-  if(error){
-    console.error(error);
-    toast(t("err_db"));
-    return;
+  // Zahl mit Komma ODER Punkt zulassen (häufige Fehlerquelle auf dem Handy)
+  function toNum(v){
+    if(v === null || v === undefined) return NaN;
+    var s = String(v).trim().replace(',', '.');
+    return parseFloat(s);
   }
-  entries = data || [];
-  renderList();
-}
 
-function subscribeLive(){
-  supabaseClient
-    .channel("entries-changes")
-    .on("postgres_changes", { event: "*", schema: "public", table: "entries" }, ()=>{
+  // Maschinen mit Kilometerstand (alles andere -> Betriebsstunden)
+  var KM_MASCHINEN = ['LKW'];
+  function updateStandLabel(){
+    var istKm = KM_MASCHINEN.indexOf(machineEl.value) !== -1;
+    standLabelEl.textContent = istKm ? t('lKilometerstand') : t('lBetriebsstunden');
+    standEl.placeholder = istKm ? 'z. B. 185400' : 'z. B. 1234';
+  }
+  machineEl.addEventListener('change', updateStandLabel);
+
+  // Tankquelle: Tankwagen (mit Anfang/Ende) vs. DKV-Karte (nur Menge)
+  function updateTankquelle(){
+    var istTankwagen = tankquelleEl.value === 'Tankwagen';
+    tankwagenWrap.hidden = !istTankwagen;
+    diffBox.hidden = !istTankwagen;
+    anfangEl.required = istTankwagen;
+    if(!istTankwagen){
+      anfangEl.value = '';
+      endeEl.value = '';
+      diffOut.textContent = '–';
+    }
+  }
+  tankquelleEl.addEventListener('change', updateTankquelle);
+  var diffOut = document.getElementById('diff-out');
+  var errEl = document.getElementById('err');
+  var okEl = document.getElementById('ok');
+  var listEl = document.getElementById('list');
+  var summaryEl = document.getElementById('summary');
+  var exportBtn = document.getElementById('export-btn');
+  var exportCsvBtn = document.getElementById('export-csv-btn');
+  var exportPdfBtn = document.getElementById('export-pdf-btn');
+  updateTankquelle();
+
+  var currentPhotoDataUrl = null;
+  var entriesCache = [];
+
+  // ---------- Login ----------
+  loginForm.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    loginErr.hidden = true;
+    supabase.auth.signInWithPassword({
+      email: loginEmail.value.trim(),
+      password: loginPassword.value
+    }).then(function(res){
+      if(res.error){
+        loginErr.textContent = t('loginFailed') + res.error.message;
+        loginErr.hidden = false;
+        return;
+      }
+      showApp();
+    });
+  });
+
+  logoutBtn.addEventListener('click', function(){
+    supabase.auth.signOut().then(function(){
+      appEl.style.display = 'none';
+      loginScreen.style.display = 'block';
+    });
+  });
+
+  function showApp(){
+    loginScreen.style.display = 'none';
+    appEl.style.display = 'block';
+    datumEl.value = todayISO();
+    updateStandLabel();
+    loadEntries();
+    subscribeRealtime();
+    restoreDraft();
+  }
+
+  supabase.auth.getSession().then(function(res){
+    if(res.data && res.data.session){
+      showApp();
+    }
+  });
+
+  // ---------- Daten laden ----------
+  function loadEntries(){
+    supabase.from('entries').select('*').order('created_at', { ascending: false }).limit(500)
+      .then(function(res){
+        if(res.error){
+          errEl.textContent = t('loadFailed') + res.error.message;
+          errEl.hidden = false;
+          return;
+        }
+        entriesCache = res.data || [];
+        render();
+      });
+  }
+
+  function subscribeRealtime(){
+    supabase.channel('entries-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, function(){
+        loadEntries();
+      })
+      .subscribe();
+  }
+
+  function todayISO(){
+    var d = new Date();
+    var m = String(d.getMonth()+1).padStart(2,'0');
+    var day = String(d.getDate()).padStart(2,'0');
+    return d.getFullYear()+'-'+m+'-'+day;
+  }
+
+  // ---------- Entwurf-Sicherung (gegen Reload-Datenverlust) ----------
+  var DRAFT_KEY = 'tankprotokoll_draft_v2';
+  var draftFields = [mitarbeiterEl, datumEl, baustelleEl, tankquelleEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl];
+  function saveDraft(){
+    try{
+      var draft = {};
+      draftFields.forEach(function(el){ draft[el.id] = el.value; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    }catch(e){}
+  }
+  function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }
+  function restoreDraft(){
+    try{
+      var raw = localStorage.getItem(DRAFT_KEY);
+      if(!raw) return;
+      var draft = JSON.parse(raw);
+      var hasContent = false;
+      draftFields.forEach(function(el){
+        if(draft[el.id]){
+          el.value = draft[el.id];
+          if(el.id !== 'datum') hasContent = true;
+        }
+      });
+      if(hasContent){
+        updateDiff();
+        updateStandLabel();
+        updateTankquelle();
+        okEl.textContent = t('draftMsg');
+        okEl.hidden = false;
+      }
+    }catch(e){}
+  }
+  draftFields.forEach(function(el){
+    el.addEventListener('input', saveDraft);
+    el.addEventListener('change', saveDraft);
+  });
+
+  function updateDiff(){
+    var a = toNum(anfangEl.value);
+    var m = toNum(mengeEl.value);
+    if(isFinite(a) && isFinite(m)){
+      var ende = Math.round((a - m) * 10) / 10;
+      endeEl.value = ende;
+      diffOut.textContent = ende.toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l';
+    } else {
+      endeEl.value = '';
+      diffOut.textContent = '–';
+    }
+  }
+  anfangEl.addEventListener('input', updateDiff);
+  mengeEl.addEventListener('input', updateDiff);
+
+  function showPhotoPreview(dataUrl){
+    currentPhotoDataUrl = dataUrl;
+    uploadImg.src = dataUrl;
+    uploadPlaceholder.hidden = true;
+    uploadPreview.hidden = false;
+  }
+  function clearPhoto(){
+    currentPhotoDataUrl = null;
+    uploadImg.src = '';
+    lieferscheinInput.value = '';
+    uploadPlaceholder.hidden = false;
+    uploadPreview.hidden = true;
+  }
+  function dataUrlToBlob(dataUrl){ return fetch(dataUrl).then(function(r){ return r.blob(); }); }
+
+  function compressImage(file, callback){
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var img = new Image();
+      img.onload = function(){
+        var maxW = 1000;
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = function(){ callback(null); };
+      img.src = ev.target.result;
+    };
+    reader.onerror = function(){ callback(null); };
+    reader.readAsDataURL(file);
+  }
+
+  lieferscheinInput.addEventListener('change', function(){
+    var file = lieferscheinInput.files && lieferscheinInput.files[0];
+    if(!file) return;
+    compressImage(file, function(dataUrl){ if(dataUrl) showPhotoPreview(dataUrl); });
+  });
+  uploadRemove.addEventListener('click', function(ev){ ev.preventDefault(); clearPhoto(); });
+
+  function fmtDate(iso){
+    var p = String(iso).split('-');
+    if(p.length !== 3) return iso;
+    return p[2]+'.'+p[1]+'.'+p[0];
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function renderSummary(entries){
+    if(entries.length === 0){
+      summaryEl.innerHTML = '<p class="empty">' + t('noData') + '</p>';
+      return;
+    }
+    var totals = {};
+    entries.forEach(function(en){
+      if(!totals[en.maschine]) totals[en.maschine] = {sum:0, count:0};
+      totals[en.maschine].sum += Number(en.menge_liter) || 0;
+      totals[en.maschine].count += 1;
+    });
+    var names = Object.keys(totals).sort(function(a,b){ return totals[b].sum - totals[a].sum; });
+    summaryEl.innerHTML = '<div class="summary-grid">' + names.map(function(name){
+      var t2 = totals[name];
+      return '<div class="summary-tile">' +
+        '<div class="m-name">' + escapeHtml(name) + '</div>' +
+        '<div class="m-total">' + t2.sum.toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l</div>' +
+        '<div class="m-count">' + t2.count + '×</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  function standText(en){
+    if(en.betriebsstunden != null) return Number(en.betriebsstunden).toLocaleString('de-DE',{maximumFractionDigits:1}) + ' h';
+    if(en.kilometerstand != null) return Number(en.kilometerstand).toLocaleString('de-DE',{maximumFractionDigits:1}) + ' km';
+    return '';
+  }
+  var tqLabel = { Tankwagen:'Tankwagen', DKV:'DKV-Karte' };
+
+  function render(){
+    var entries = entriesCache;
+    renderSummary(entries);
+    if(entries.length === 0){
+      listEl.innerHTML = '<p class="empty">' + t('noEntries') + '</p>';
+      exportBtn.hidden = true; exportCsvBtn.hidden = true; exportPdfBtn.hidden = true;
+      return;
+    }
+    exportBtn.hidden = false; exportCsvBtn.hidden = false; exportPdfBtn.hidden = false;
+    listEl.innerHTML = entries.map(function(en){
+      var photoUrl = en.lieferschein_path
+        ? supabase.storage.from(BUCKET).getPublicUrl(en.lieferschein_path).data.publicUrl
+        : '';
+      var standStr = standText(en);
+      return '<div class="entry">' +
+        '<div class="left">' +
+          '<span class="top">' + escapeHtml(en.maschine) + ' · ' + escapeHtml(en.seriennummer) + '</span>' +
+          '<span class="bottom">' + fmtDate(en.datum) + ' — ' + escapeHtml(en.baustelle) + ' · ' + escapeHtml(tqLabel[en.tankquelle] || en.tankquelle || '–') +
+            (en.kartennummer ? ' · Karte ' + escapeHtml(en.kartennummer) : '') +
+            (standStr ? ' · ' + standStr : '') +
+            (en.mitarbeiter ? ' · ' + escapeHtml(en.mitarbeiter) : '') + '</span>' +
+        '</div>' +
+        (photoUrl ? '<img class="thumb" src="' + photoUrl + '" alt="Lieferschein" data-full="' + photoUrl + '">' : '') +
+        '<div class="amount">' + Number(en.menge_liter).toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightbox-img');
+  listEl.addEventListener('click', function(e){
+    var th = e.target.closest('.thumb');
+    if(!th) return;
+    lightboxImg.src = th.dataset.full;
+    lightbox.hidden = false;
+  });
+  lightbox.addEventListener('click', function(){ lightbox.hidden = true; lightboxImg.src = ''; });
+
+  function resetForm(){
+    baustelleEl.value = ''; tankquelleEl.value = ''; machineEl.value = ''; serialEl.value = ''; standEl.value = ''; mengeEl.value = '';
+    kartennummerEl.value = ''; anfangEl.value = ''; endeEl.value = ''; diffOut.textContent = '–';
+    updateStandLabel();
+    updateTankquelle();
+    clearPhoto(); clearDraft(); baustelleEl.focus();
+  }
+
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    errEl.hidden = true; okEl.hidden = true;
+
+    var mitarbeiter = mitarbeiterEl.value.trim();
+    var datum = datumEl.value;
+    var baustelle = baustelleEl.value.trim();
+    var tankquelle = tankquelleEl.value;
+    var istTankwagen = tankquelle === 'Tankwagen';
+    var machine = machineEl.value;
+    var serial = serialEl.value.trim();
+    var stand = toNum(standEl.value);
+    var istKm = KM_MASCHINEN.indexOf(machine) !== -1;
+    var menge = toNum(mengeEl.value);
+    var kartennummer = kartennummerEl.value.trim();
+    var anfang = istTankwagen ? toNum(anfangEl.value) : null;
+    var ende = istTankwagen ? toNum(endeEl.value) : null;
+
+    if(!mitarbeiter || !datum || !baustelle || !tankquelle || !machine || !serial || !isFinite(stand) || !isFinite(menge) || !kartennummer){
+      errEl.textContent = t('fillAll');
+      errEl.hidden = false;
+      return;
+    }
+    if(istTankwagen && (!isFinite(anfang) || !isFinite(ende))){
+      errEl.textContent = t('needAnfang');
+      errEl.hidden = false;
+      return;
+    }
+    if(istTankwagen && ende > anfang){
+      errEl.textContent = t('endeTooBig');
+      errEl.hidden = false;
+      return;
+    }
+
+    var submitBtn = form.querySelector('.submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = t('saving');
+
+    function finish(){
+      okEl.textContent = t('savedMsg'); okEl.hidden = false;
+      submitBtn.disabled = false; submitBtn.textContent = t('saveBtn');
+      resetForm();
+    }
+    function fail(msg){
+      errEl.textContent = msg; errEl.hidden = false;
+      submitBtn.disabled = false; submitBtn.textContent = t('saveBtn');
+    }
+
+    var photoPromise = currentPhotoDataUrl
+      ? dataUrlToBlob(currentPhotoDataUrl).then(function(blob){
+          var path = Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg';
+          return supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg' })
+            .then(function(res){
+              if(res.error) return null;
+              return path;
+            });
+        })
+      : Promise.resolve(null);
+
+    photoPromise.then(function(photoPath){
+      return supabase.from('entries').insert({
+        datum: datum, mitarbeiter: mitarbeiter, baustelle: baustelle, tankquelle: tankquelle,
+        maschine: machine, seriennummer: serial,
+        betriebsstunden: istKm ? null : stand,
+        kilometerstand: istKm ? stand : null,
+        menge_liter: menge, kartennummer: kartennummer,
+        tankwagen_anfang: anfang, tankwagen_ende: ende,
+        lieferschein_path: photoPath
+      });
+    }).then(function(res){
+      if(res.error){
+        fail(t('saveFailed') + res.error.message);
+        return;
+      }
+      finish();
       loadEntries();
-    })
-    .subscribe();
-}
+    }).catch(function(e){
+      fail(t('saveFailedRetry'));
+    });
+  });
 
-function init(){
-  $("datum").value = new Date().toISOString().slice(0,10);
-  populateFilterMachines();
-  wireEvents();
-  updateConditionalFields();
+  exportBtn.addEventListener('click', function(){
+    var entries = entriesCache;
+    var lines = entries.map(function(en){
+      return [fmtDate(en.datum), en.mitarbeiter, en.baustelle, 'Quelle: '+(tqLabel[en.tankquelle] || en.tankquelle || '–'), en.maschine, en.seriennummer,
+        standText(en) ? ('Zähler: ' + standText(en)) : '',
+        'Menge: '+en.menge_liter+' l', 'Karte: '+en.kartennummer,
+        en.tankquelle === 'Tankwagen' ? ('Anfang: '+en.tankwagen_anfang+' l | Ende: '+en.tankwagen_ende+' l') : '',
+        en.lieferschein_path ? 'Beleg: ja' : 'Beleg: nein'].filter(Boolean).join(' | ');
+    });
+    var text = lines.join('\n');
+    function fallbackSelect(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(fallbackSelect);
+    } else { fallbackSelect(); }
+    var old = exportBtn.textContent;
+    exportBtn.textContent = t('copied');
+    setTimeout(function(){ exportBtn.textContent = old; }, 1800);
+  });
+
+  function csvCell(v){
+    var s = String(v == null ? '' : v);
+    if(/[;"\n]/.test(s)) s = '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+
+  exportCsvBtn.addEventListener('click', function(){
+    var entries = entriesCache;
+    var header = ['Datum','Mitarbeiter','Baustelle','Tankquelle','Maschine','Seriennummer','Betriebsstunden','Kilometerstand','Menge (l)','Kartennummer','Anfang (l)','Ende (l)','Beleg vorhanden'];
+    var rows = entries.map(function(en){
+      return [fmtDate(en.datum), en.mitarbeiter, en.baustelle, tqLabel[en.tankquelle] || en.tankquelle, en.maschine, en.seriennummer,
+        en.betriebsstunden, en.kilometerstand, en.menge_liter, en.kartennummer, en.tankwagen_anfang, en.tankwagen_ende,
+        en.lieferschein_path ? 'ja' : 'nein']
+        .map(csvCell).join(';');
+    });
+    var csv = header.join(';') + '\n' + rows.join('\n');
+    function fallbackSelect(){
+      var ta = document.createElement('textarea');
+      ta.value = csv; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(csv).catch(fallbackSelect);
+    } else { fallbackSelect(); }
+    var old = exportCsvBtn.textContent;
+    exportCsvBtn.textContent = t('copied');
+    setTimeout(function(){ exportCsvBtn.textContent = old; }, 1800);
+  });
+
+  exportPdfBtn.addEventListener('click', function(){
+    var entries = entriesCache;
+    if(!entries.length) return;
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      errEl.textContent = t('pdfFail');
+      errEl.hidden = false;
+      return;
+    }
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    var pageW = doc.internal.pageSize.getWidth();
+    var marginX = 14; var y = 16;
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(16);
+    doc.text('Tankprotokoll Baustelle', marginX, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(110,110,110);
+    doc.text('Erstellt am ' + new Date().toLocaleDateString('de-DE'), marginX, y + 6);
+    doc.setTextColor(0,0,0); y += 16;
+
+    var cols = [
+      {label:'Datum', w:16},{label:'Mitarbeiter', w:22},{label:'Baustelle', w:24},{label:'Quelle', w:16},{label:'Maschine', w:18},{label:'Seriennr.', w:18},
+      {label:'Std./km', w:16},
+      {label:'Menge (l)', w:16},{label:'Kartennr.', w:16},{label:'Anfang (l)', w:16},{label:'Ende (l)', w:14}
+    ];
+    var rowH = 8;
+
+    function drawHeader(){
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
+      doc.setFillColor(212,98,31); doc.setTextColor(255,255,255);
+      doc.rect(marginX, y, pageW - marginX*2, rowH, 'F');
+      var x = marginX;
+      cols.forEach(function(c){ doc.text(c.label, x + 2, y + rowH/2 + 1.2); x += c.w; });
+      doc.setTextColor(0,0,0); y += rowH;
+    }
+
+    drawHeader();
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+
+    entries.forEach(function(en, i){
+      if(y + rowH > doc.internal.pageSize.getHeight() - 14){
+        doc.addPage(); y = 16; drawHeader();
+        doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      }
+      if(i % 2 === 0){
+        doc.setFillColor(246,243,236);
+        doc.rect(marginX, y, pageW - marginX*2, rowH, 'F');
+      }
+      var istTW = en.tankquelle === 'Tankwagen';
+      var vals = [
+        fmtDate(en.datum), en.mitarbeiter || '–', en.baustelle, tqLabel[en.tankquelle] || en.tankquelle || '–', en.maschine, en.seriennummer,
+        standText(en) || '–',
+        String(en.menge_liter),
+        en.kartennummer || '–',
+        istTW ? String(en.tankwagen_anfang) : '–', istTW ? String(en.tankwagen_ende) : '–'
+      ];
+      var x = marginX;
+      vals.forEach(function(v, idx){
+        var w = cols[idx].w;
+        var text = doc.splitTextToSize(String(v), w - 4)[0] || '';
+        doc.text(text, x + 2, y + rowH/2 + 1.2);
+        x += w;
+      });
+      doc.setDrawColor(222,218,208);
+      doc.line(marginX, y + rowH, pageW - marginX, y + rowH);
+      y += rowH;
+    });
+
+    var filename = 'tankprotokoll_' + todayISO() + '.pdf';
+    doc.save(filename);
+  });
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+
   applyLang();
-  loadEntries();
-  subscribeLive();
-}
-
-if(document.readyState === "loading"){
-  document.addEventListener("DOMContentLoaded", init);
-}else{
-  init();
-}
 })();
 </script>
 </body>
