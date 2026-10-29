@@ -134,7 +134,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   <div class="card">
     <form id="form">
       <label for="mitarbeiter" data-i18n="lMitarbeiter">Name (Mitarbeiter)</label>
-      <input type="text" id="mitarbeiter" required>
+      <input type="text" id="mitarbeiter" required readonly>
 
       <label for="datum" data-i18n="lDatum">Datum</label>
       <input type="date" id="datum" required>
@@ -401,7 +401,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         loginErr.hidden = false;
         return;
       }
-      showApp();
+      showApp(res.data && res.data.session);
     });
   });
 
@@ -412,19 +412,27 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     });
   });
 
-  function showApp(){
+  function fillMitarbeiterFromSession(session){
+    var email = (session && session.user && session.user.email) || '';
+    mitarbeiterEl.value = email;
+  }
+
+  function showApp(session){
     loginScreen.style.display = 'none';
     appEl.style.display = 'block';
     datumEl.value = todayISO();
+    fillMitarbeiterFromSession(session);
     updateStandLabel();
     loadEntries();
     subscribeRealtime();
     restoreDraft();
+    // Name kommt aus dem Login und bleibt gesperrt, auch wenn ein alter Entwurf geladen wird
+    fillMitarbeiterFromSession(session);
   }
 
   supabase.auth.getSession().then(function(res){
     if(res.data && res.data.session){
-      showApp();
+      showApp(res.data.session);
     }
   });
 
@@ -459,7 +467,8 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
   // ---------- Entwurf-Sicherung (gegen Reload-Datenverlust) ----------
   var DRAFT_KEY = 'tankprotokoll_draft_v2';
-  var draftFields = [mitarbeiterEl, datumEl, baustelleEl, tankquelleEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl];
+  // mitarbeiterEl bewusst nicht im Entwurf: der Name kommt immer aus dem Login, nie aus einem gespeicherten Entwurf
+  var draftFields = [datumEl, baustelleEl, tankquelleEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl];
   function saveDraft(){
     try{
       var draft = {};
