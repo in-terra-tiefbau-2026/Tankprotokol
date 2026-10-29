@@ -32,6 +32,10 @@ body{
 .wrap{max-width:640px;margin:0 auto}
 h1{font-size:clamp(24px,5vw,30px);font-weight:800;margin:0 0 4px;letter-spacing:-0.01em}
 .sub{color:var(--muted);margin:0 0 22px;font-size:15px}
+.muted{color:var(--muted)}
+.auswertung-table{width:100%;border-collapse:collapse;font-size:14px}
+.auswertung-table td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.auswertung-table td:nth-child(2){font-weight:700;white-space:nowrap}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px}
 label{display:block;font-weight:700;font-size:16px;margin:18px 0 8px}
 label:first-of-type{margin-top:0}
@@ -225,6 +229,12 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       <button class="export-btn" id="export-pdf-btn" hidden data-i18n="exportPdf">Als PDF speichern</button>
     </div>
   </div>
+
+  <div class="card" id="auswertung-card" hidden>
+    <h2 data-i18n="auswertungTitle">Auswertung: Laufleistung je Maschine (14 Tage)</h2>
+    <p class="sub" data-i18n="auswertungSub">Nur für Admins sichtbar. LKW: gefahrene Kilometer · andere Maschinen: Betriebsstunden. Je Zeitraum (letzter Eintrag minus erster Eintrag im Fenster) und Seriennummer.</p>
+    <div id="auswertung"></div>
+  </div>
 </div>
 
 <div class="lightbox" id="lightbox" hidden>
@@ -279,6 +289,13 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     uploadRemove:{de:'Entfernen', ru:'Удалить'},
     saveBtn:{de:'Eintrag speichern', ru:'Сохранить запись'},
     summaryTitle:{de:'Verbrauch pro Maschine', ru:'Расход по технике'},
+    auswertungTitle:{de:'Auswertung: Laufleistung je Maschine (14 Tage)', ru:'Отчёт: наработка по технике (14 дней)'},
+    auswertungSub:{de:'Nur für Admins sichtbar. LKW: gefahrene Kilometer · andere Maschinen: Betriebsstunden. Je Zeitraum (letzter Eintrag minus erster Eintrag im Fenster) und Seriennummer.', ru:'Виден только админам. Грузовики: пройденные километры · остальная техника: моточасы. За период (последняя запись минус первая запись в окне) и по серийному номеру.'},
+    auswertungEmpty:{de:'Keine Daten im letzten 14-Tage-Fenster.', ru:'Нет данных за последние 14 дней.'},
+    auswertungKm:{de:'km', ru:'км'},
+    auswertungBh:{de:'Bh', ru:'мч'},
+    auswertungVon:{de:'von', ru:'с'},
+    auswertungBis:{de:'bis', ru:'по'},
     listTitle:{de:'Letzte Einträge', ru:'Последние записи'},
     exportText:{de:'Als Text kopieren', ru:'Копировать как текст'},
     exportCsv:{de:'Als CSV kopieren (für Excel)', ru:'Копировать как CSV (для Excel)'},
@@ -417,6 +434,9 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     mitarbeiterEl.value = email;
   }
 
+  var auswertungCardEl = document.getElementById('auswertung-card');
+  var auswertungEl = document.getElementById('auswertung');
+
   function showApp(session){
     loginScreen.style.display = 'none';
     appEl.style.display = 'block';
@@ -428,6 +448,64 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     restoreDraft();
     // Name kommt aus dem Login und bleibt gesperrt, auch wenn ein alter Entwurf geladen wird
     fillMitarbeiterFromSession(session);
+    checkAdminAndShowAuswertung();
+  }
+
+  // ---------- Auswertung: Laufleistung je Maschine, nur für Admins ----------
+  function checkAdminAndShowAuswertung(){
+    supabase.rpc('is_app_admin').then(function(res){
+      if(res.error || !res.data) return;
+      auswertungCardEl.hidden = false;
+      renderAuswertung();
+    });
+  }
+
+  function renderAuswertung(){
+    var cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 14);
+    supabase.from('entries').select('maschine,seriennummer,betriebsstunden,kilometerstand,datum,created_at')
+      .gte('created_at', cutoff.toISOString())
+      .order('created_at', { ascending: true })
+      .then(function(res){
+        if(res.error){
+          auswertungEl.innerHTML = '<p>' + escapeHtml(res.error.message) + '</p>';
+          return;
+        }
+        var rows = res.data || [];
+        // Gruppieren nach Maschine + Seriennummer
+        var groups = {};
+        rows.forEach(function(r){
+          var key = r.maschine + '||' + r.seriennummer;
+          if(!groups[key]) groups[key] = { maschine: r.maschine, seriennummer: r.seriennummer, einträge: [] };
+          groups[key].einträge.push(r);
+        });
+        var keys = Object.keys(groups);
+        if(keys.length === 0){
+          auswertungEl.innerHTML = '<p>' + t('auswertungEmpty') + '</p>';
+          return;
+        }
+        var isKmMachine = function(m){ return m === 'LKW'; };
+        var html = '<table class="auswertung-table"><tbody>';
+        keys.sort().forEach(function(key){
+          var g = groups[key];
+          var list = g.einträge;
+          var first = list[0];
+          var last = list[list.length - 1];
+          var useKm = isKmMachine(g.maschine);
+          var firstVal = useKm ? first.kilometerstand : first.betriebsstunden;
+          var lastVal = useKm ? last.kilometerstand : last.betriebsstunden;
+          var diff = (firstVal != null && lastVal != null) ? (Number(lastVal) - Number(firstVal)) : null;
+          var unit = useKm ? t('auswertungKm') : t('auswertungBh');
+          var diffText = diff != null ? diff.toLocaleString('de-DE',{maximumFractionDigits:1}) + ' ' + unit : '–';
+          html += '<tr>' +
+            '<td><b>' + escapeHtml(g.maschine) + '</b><br><span class="muted">' + escapeHtml(g.seriennummer) + '</span></td>' +
+            '<td>' + diffText + '</td>' +
+            '<td class="muted">' + t('auswertungVon') + ' ' + fmtDate(first.datum) + ' ' + t('auswertungBis') + ' ' + fmtDate(last.datum) + ' · ' + list.length + 'x</td>' +
+            '</tr>';
+        });
+        html += '</tbody></table>';
+        auswertungEl.innerHTML = html;
+      });
   }
 
   supabase.auth.getSession().then(function(res){
@@ -454,6 +532,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     supabase.channel('entries-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, function(){
         loadEntries();
+        if(!auswertungCardEl.hidden) renderAuswertung();
       })
       .subscribe();
   }
