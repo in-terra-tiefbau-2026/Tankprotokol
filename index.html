@@ -162,7 +162,18 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         <option value="LKW" data-i18n="optLKW">LKW</option>
         <option value="Erdrakete" data-i18n="optErdrakete">Erdrakete</option>
         <option value="Rüttelplatte" data-i18n="optRuettelplatte">Rüttelplatte</option>
+        <option value="Kanister" data-i18n="optKanister">Kanister (Brigade)</option>
       </select>
+
+      <div id="brigade-wrap" hidden>
+        <label for="brigade" data-i18n="lBrigade">Brigade</label>
+        <select id="brigade">
+          <option value="" disabled selected data-i18n="optChoose">Bitte auswählen …</option>
+          <option value="1" data-i18n="optBrigade1">Brigade 1</option>
+          <option value="2" data-i18n="optBrigade2">Brigade 2</option>
+          <option value="3" data-i18n="optBrigade3">Brigade 3</option>
+        </select>
+      </div>
 
       <div id="serial-wrap">
         <label for="serial" data-i18n="lSeriennummer">Seriennummer der Maschine</label>
@@ -275,6 +286,11 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     optLKW:{de:'LKW', ru:'Грузовик (LKW)'},
     optErdrakete:{de:'Erdrakete', ru:'Прокольная установка (Erdrakete)'},
     optRuettelplatte:{de:'Rüttelplatte', ru:'Виброплита'},
+    optKanister:{de:'Kanister (Brigade)', ru:'Канистра (бригада)'},
+    lBrigade:{de:'Brigade', ru:'Бригада'},
+    optBrigade1:{de:'Brigade 1', ru:'Бригада 1'},
+    optBrigade2:{de:'Brigade 2', ru:'Бригада 2'},
+    optBrigade3:{de:'Brigade 3', ru:'Бригада 3'},
     lSeriennummer:{de:'Seriennummer der Maschine', ru:'Серийный номер техники'},
     lBetriebsstunden:{de:'Betriebsstunden vor dem Tanken', ru:'Моточасы перед заправкой'},
     lKilometerstand:{de:'Kilometerstand aktuell', ru:'Текущий пробег (км)'},
@@ -362,6 +378,10 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   var serialEl = document.getElementById('serial');
   var standEl = document.getElementById('stand');
   var standLabelEl = document.getElementById('stand-label');
+  var serialWrap = document.getElementById('serial-wrap');
+  var standWrap = document.getElementById('stand-wrap');
+  var brigadeWrap = document.getElementById('brigade-wrap');
+  var brigadeEl = document.getElementById('brigade');
 
   // Zahl mit Komma ODER Punkt zulassen (häufige Fehlerquelle auf dem Handy)
   function toNum(v){
@@ -377,7 +397,24 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     standLabelEl.textContent = istKm ? t('lKilometerstand') : t('lBetriebsstunden');
     standEl.placeholder = istKm ? 'z. B. 185400' : 'z. B. 1234';
   }
-  machineEl.addEventListener('change', updateStandLabel);
+  // Kanister (Brigade): kein Seriennummer-/Betriebsstunden-Feld, stattdessen Brigade-Auswahl
+  function updateMachineMode(){
+    var istKanister = machineEl.value === 'Kanister';
+    brigadeWrap.hidden = !istKanister;
+    serialWrap.hidden = istKanister;
+    standWrap.hidden = istKanister;
+    brigadeEl.required = istKanister;
+    serialEl.required = !istKanister;
+    standEl.required = !istKanister;
+    if(istKanister){
+      serialEl.value = '';
+      standEl.value = '';
+    } else {
+      brigadeEl.value = '';
+    }
+    updateStandLabel();
+  }
+  machineEl.addEventListener('change', updateMachineMode);
 
   // Tankquelle: Tankwagen (mit Anfang/Ende) vs. DKV-Karte (nur Menge)
   function updateTankquelle(){
@@ -401,6 +438,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   var exportCsvBtn = document.getElementById('export-csv-btn');
   var exportPdfBtn = document.getElementById('export-pdf-btn');
   updateTankquelle();
+  updateMachineMode();
 
   var currentPhotoDataUrl = null;
   var entriesCache = [];
@@ -442,7 +480,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     appEl.style.display = 'block';
     datumEl.value = todayISO();
     fillMitarbeiterFromSession(session);
-    updateStandLabel();
+    updateMachineMode();
     loadEntries();
     subscribeRealtime();
     restoreDraft();
@@ -547,7 +585,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   // ---------- Entwurf-Sicherung (gegen Reload-Datenverlust) ----------
   var DRAFT_KEY = 'tankprotokoll_draft_v2';
   // mitarbeiterEl bewusst nicht im Entwurf: der Name kommt immer aus dem Login, nie aus einem gespeicherten Entwurf
-  var draftFields = [datumEl, baustelleEl, tankquelleEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl];
+  var draftFields = [datumEl, baustelleEl, tankquelleEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl, brigadeEl];
   function saveDraft(){
     try{
       var draft = {};
@@ -570,7 +608,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       });
       if(hasContent){
         updateDiff();
-        updateStandLabel();
+        updateMachineMode();
         updateTankquelle();
         okEl.textContent = t('draftMsg');
         okEl.hidden = false;
@@ -721,8 +759,8 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
   function resetForm(){
     baustelleEl.value = ''; tankquelleEl.value = ''; machineEl.value = ''; serialEl.value = ''; standEl.value = ''; mengeEl.value = '';
-    kartennummerEl.value = ''; anfangEl.value = ''; endeEl.value = ''; diffOut.textContent = '–';
-    updateStandLabel();
+    kartennummerEl.value = ''; anfangEl.value = ''; endeEl.value = ''; diffOut.textContent = '–'; brigadeEl.value = '';
+    updateMachineMode();
     updateTankquelle();
     clearPhoto(); clearDraft(); baustelleEl.focus();
   }
@@ -737,15 +775,27 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     var tankquelle = tankquelleEl.value;
     var istTankwagen = tankquelle === 'Tankwagen';
     var machine = machineEl.value;
-    var serial = serialEl.value.trim();
-    var stand = toNum(standEl.value);
+    var istKanister = machine === 'Kanister';
+    var brigade = brigadeEl.value;
+    var serial = istKanister ? ('Brigade ' + brigade) : serialEl.value.trim();
+    var stand = istKanister ? NaN : toNum(standEl.value);
     var istKm = KM_MASCHINEN.indexOf(machine) !== -1;
     var menge = toNum(mengeEl.value);
     var kartennummer = kartennummerEl.value.trim();
     var anfang = istTankwagen ? toNum(anfangEl.value) : null;
     var ende = istTankwagen ? toNum(endeEl.value) : null;
 
-    if(!mitarbeiter || !datum || !baustelle || !tankquelle || !machine || !serial || !isFinite(stand) || !isFinite(menge) || !kartennummer){
+    if(!mitarbeiter || !datum || !baustelle || !tankquelle || !machine || !isFinite(menge) || !kartennummer){
+      errEl.textContent = t('fillAll');
+      errEl.hidden = false;
+      return;
+    }
+    if(istKanister && !brigade){
+      errEl.textContent = t('fillAll');
+      errEl.hidden = false;
+      return;
+    }
+    if(!istKanister && (!serial || !isFinite(stand))){
       errEl.textContent = t('fillAll');
       errEl.hidden = false;
       return;
@@ -790,8 +840,8 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       return supabase.from('entries').insert({
         datum: datum, mitarbeiter: mitarbeiter, baustelle: baustelle, tankquelle: tankquelle,
         maschine: machine, seriennummer: serial,
-        betriebsstunden: istKm ? null : stand,
-        kilometerstand: istKm ? stand : null,
+        betriebsstunden: (istKanister || istKm) ? null : stand,
+        kilometerstand: (!istKanister && istKm) ? stand : null,
         menge_liter: menge, kartennummer: kartennummer,
         tankwagen_anfang: anfang, tankwagen_ende: ende,
         lieferschein_path: photoPath
