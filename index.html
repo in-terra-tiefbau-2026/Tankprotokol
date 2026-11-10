@@ -580,7 +580,8 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     fahrzeugBlock.hidden = istKanister;
     machineWrap.hidden = istKanister;
     serialWrap.hidden = istKanister;
-    standWrap.hidden = false;
+    // Kanister-Seite: keine Betriebsstunden (Wunsch Viktoria 10.11.2026)
+    standWrap.hidden = istKanister;
     brigadeEl.required = istKanister;
     serialEl.required = !istKanister;
     standEl.required = !istKanister;
@@ -589,6 +590,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     if(istKanister){
       serialEl.value = '';
       fahrzeugEl.value = '';
+      standEl.value = '';
     } else {
       brigadeEl.value = '';
       calcBox.hidden = true;
