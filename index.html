@@ -99,6 +99,14 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 #login-screen .sub{text-align:center}
 #login-screen .topbtns{justify-content:center;margin-bottom:18px}
 #app{display:none}
+.modetabs,.cattabs{display:flex;gap:8px;margin:0 0 18px}
+.cattabs{margin:18px 0 0}
+.mode-btn,.cat-btn{flex:1;background:var(--surface);border:2px solid var(--line);color:var(--ink);border-radius:12px;padding:14px 10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+.mode-btn.active,.cat-btn.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font-family:inherit;min-height:70px}
+.calc-box{margin-top:14px;background:var(--ok-bg);color:var(--ink);border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.5}
+.calc-box b{font-variant-numeric:tabular-nums}
+[hidden]{display:none !important}
 </style>
 </head>
 <body>
@@ -135,16 +143,30 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     </div>
   </div>
 
+  <div class="modetabs" role="group">
+    <button type="button" class="mode-btn active" data-mode="tanken" data-i18n="modeTanken">Tanken</button>
+    <button type="button" class="mode-btn" data-mode="kanister" data-i18n="modeKanister">Kanister an Brigade</button>
+  </div>
+
   <div class="card">
     <form id="form">
       <label for="mitarbeiter" data-i18n="lMitarbeiter">Name (Mitarbeiter)</label>
       <input type="text" id="mitarbeiter" required readonly>
 
-      <label for="datum" data-i18n="lDatum">Datum</label>
-      <input type="date" id="datum" required>
+      <div class="row2">
+        <div>
+          <label for="datum" data-i18n="lDatum">Datum</label>
+          <input type="date" id="datum" required>
+        </div>
+        <div>
+          <label for="uhrzeit" data-i18n="lUhrzeit">Uhrzeit</label>
+          <input type="time" id="uhrzeit" required>
+        </div>
+      </div>
 
       <label for="baustelle" data-i18n="lBaustelle">Baustelle</label>
-      <input type="text" id="baustelle" placeholder="z. B. Hannover, Dragonerstraße" required>
+      <input type="text" id="baustelle" placeholder="z. B. Hannover, Dragonerstraße" required list="baustellen-liste" autocomplete="off">
+      <datalist id="baustellen-liste"></datalist>
 
       <label for="tankquelle" data-i18n="lTankquelle">Tankquelle</label>
       <select id="tankquelle" required>
@@ -153,6 +175,16 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         <option value="DKV" data-i18n="optDKV">DKV-Karte</option>
       </select>
 
+      <div id="fahrzeug-block">
+        <div class="cattabs" role="group">
+          <button type="button" class="cat-btn active" data-cat="fzg" data-i18n="catFzg">Autos, Lkw, Transporter</button>
+          <button type="button" class="cat-btn" data-cat="masch" data-i18n="catMasch">Radlader, Bagger</button>
+        </div>
+        <label for="fahrzeug" data-i18n="lFahrzeug">Fahrzeug / Maschine</label>
+        <select id="fahrzeug"></select>
+      </div>
+
+      <div id="machine-wrap">
       <label for="machine" data-i18n="lMaschine">Maschine</label>
       <select id="machine" required>
         <option value="" disabled selected data-i18n="optChoose">Bitte auswählen …</option>
@@ -162,34 +194,50 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         <option value="LKW" data-i18n="optLKW">LKW</option>
         <option value="Erdrakete" data-i18n="optErdrakete">Erdrakete</option>
         <option value="Rüttelplatte" data-i18n="optRuettelplatte">Rüttelplatte</option>
+        <option value="Minibagger" data-i18n="optMinibagger">Minibagger</option>
+        <option value="Transporter" data-i18n="optTransporter">Transporter</option>
+        <option value="PKW" data-i18n="optPKW">PKW</option>
+        <option value="Sonstige" data-i18n="optSonstige">Sonstige</option>
         <option value="Kanister" data-i18n="optKanister">Kanister (Brigade)</option>
       </select>
+      </div>
 
       <div id="brigade-wrap" hidden>
         <label for="brigade" data-i18n="lBrigade">Brigade</label>
         <select id="brigade">
           <option value="" disabled selected data-i18n="optChoose">Bitte auswählen …</option>
-          <option value="1" data-i18n="optBrigade1">Brigade 1</option>
-          <option value="2" data-i18n="optBrigade2">Brigade 2</option>
-          <option value="3" data-i18n="optBrigade3">Brigade 3</option>
+          <option value="Brigade 1" data-i18n="optBrigade1">Brigade 1</option>
+          <option value="Brigade 2" data-i18n="optBrigade2">Brigade 2</option>
+          <option value="Raketchiki" data-i18n="optBrigade3">Raketchiki</option>
+        </select>
+        <label for="kraftstoff" data-i18n="lKraftstoff">Kraftstoff</label>
+        <select id="kraftstoff">
+          <option value="Super E10">Super E10</option>
+          <option value="Super E5">Super E5</option>
+          <option value="Diesel">Diesel</option>
+          <option value="2-Takt-Gemisch" data-i18n="opt2Takt">2-Takt-Gemisch</option>
         </select>
       </div>
 
       <div id="serial-wrap">
         <label for="serial" data-i18n="lSeriennummer">Seriennummer der Maschine</label>
         <input type="text" id="serial" placeholder="z. B. RP-2024-118" required>
+        <span class="hint" data-i18n="serialHint">wird aus der Liste übernommen, bei „andere“ bitte eintragen</span>
       </div>
 
       <div id="stand-wrap">
         <label for="stand" id="stand-label" data-i18n="lBetriebsstunden">Betriebsstunden vor dem Tanken</label>
         <input type="text" inputmode="decimal" id="stand" placeholder="z. B. 1234" required>
       </div>
+      <div class="calc-box" id="calc-box" hidden></div>
 
       <label for="menge" data-i18n="lMenge">Betankungsmenge (Liter)</label>
       <input type="text" inputmode="decimal" id="menge" placeholder="z. B. 15" required>
 
       <label for="kartennummer" data-i18n="lKartennummer">Kartennummer (Tankkarte)</label>
-      <input type="text" id="kartennummer" inputmode="numeric" placeholder="z. B. 1234" required>
+      <input type="text" id="kartennummer" placeholder="z. B. K16" required list="karten-liste" autocomplete="off">
+      <datalist id="karten-liste"><option value="K16"><option value="K6"><option value="K1"><option value="K2"><option value="K4"><option value="K5"><option value="K7"><option value="K8"><option value="K11"><option value="K17"></datalist>
+      <span class="hint" data-i18n="karteHint">K16 = Beleg …2172, K6 = …6967. Bei Tankwagen nicht nötig.</span>
 
       <div class="row2" id="tankwagen-wrap">
         <div>
@@ -219,6 +267,9 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
           <button type="button" id="upload-remove" class="upload-remove" data-i18n="uploadRemove">Entfernen</button>
         </div>
       </div>
+
+      <label for="bemerkung" data-i18n="lBemerkung">Bemerkung (optional)</label>
+      <textarea id="bemerkung"></textarea>
 
       <p class="err" id="err" hidden></p>
       <button type="submit" class="submit" data-i18n="saveBtn">Eintrag speichern</button>
@@ -305,9 +356,9 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     uploadRemove:{de:'Entfernen', ru:'Удалить'},
     saveBtn:{de:'Eintrag speichern', ru:'Сохранить запись'},
     summaryTitle:{de:'Verbrauch pro Maschine', ru:'Расход по технике'},
-    auswertungTitle:{de:'Auswertung: Laufleistung je Maschine (14 Tage)', ru:'Отчёт: наработка по технике (14 дней)'},
+    auswertungTitle:{de:'Auswertung: Laufleistung je Maschine (2-Wochen-Zeitraum)', ru:'Отчёт: наработка по технике (период 2 недели)'},
     auswertungSub:{de:'Nur für Admins sichtbar. LKW: gefahrene Kilometer · andere Maschinen: Betriebsstunden. Je Zeitraum (letzter Eintrag minus erster Eintrag im Fenster) und Seriennummer.', ru:'Виден только админам. Грузовики: пройденные километры · остальная техника: моточасы. За период (последняя запись минус первая запись в окне) и по серийному номеру.'},
-    auswertungEmpty:{de:'Keine Daten im letzten 14-Tage-Fenster.', ru:'Нет данных за последние 14 дней.'},
+    auswertungEmpty:{de:'Keine Fahrzeug-Daten in diesem Zeitraum.', ru:'Нет данных по технике за этот период.'},
     auswertungKm:{de:'km', ru:'км'},
     auswertungBh:{de:'Bh', ru:'мч'},
     auswertungVon:{de:'von', ru:'с'},
@@ -329,7 +380,41 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     noData:{de:'Noch keine Daten für eine Auswertung.', ru:'Пока нет данных для анализа.'},
     noEntries:{de:'Noch keine Einträge vorhanden.', ru:'Записей пока нет.'},
     copied:{de:'Kopiert ✓', ru:'Скопировано ✓'},
-    pdfFail:{de:'PDF-Werkzeug konnte nicht geladen werden. Bitte Seite neu laden.', ru:'Не удалось загрузить PDF-инструмент. Обновите страницу.'}
+    pdfFail:{de:'PDF-Werkzeug konnte nicht geladen werden. Bitte Seite neu laden.', ru:'Не удалось загрузить PDF-инструмент. Обновите страницу.'},
+    modeTanken:{de:'Tanken', ru:'Заправка'},
+    modeKanister:{de:'Kanister an Brigade', ru:'Канистра бригаде'},
+    lUhrzeit:{de:'Uhrzeit', ru:'Время'},
+    catFzg:{de:'Autos, Lkw, Transporter', ru:'Машины, грузовики'},
+    catMasch:{de:'Radlader, Bagger', ru:'Погрузчики, экскаваторы'},
+    lFahrzeug:{de:'Fahrzeug / Maschine', ru:'Машина / техника'},
+    optAndere:{de:'andere (nicht in der Liste) …', ru:'другая (нет в списке) …'},
+    optUnbest:{de:'(unbestätigt)', ru:'(не подтверждено)'},
+    optMinibagger:{de:'Minibagger', ru:'Мини-экскаватор'},
+    optTransporter:{de:'Transporter', ru:'Транспортер / бус'},
+    optPKW:{de:'PKW', ru:'Легковой автомобиль'},
+    optSonstige:{de:'Sonstige', ru:'Другое'},
+    serialHint:{de:'wird aus der Liste übernommen, bei „andere“ bitte eintragen', ru:'берётся из списка, для «другая» впишите вручную'},
+    lKraftstoff:{de:'Kraftstoff', ru:'Топливо'},
+    opt2Takt:{de:'2-Takt-Gemisch', ru:'смесь для 2-тактных'},
+    lZaehlerKanister:{de:'Stundenzähler im Bagger vor dem Tanken', ru:'Моточасы в экскаваторе перед заправкой'},
+    lMengeKanister:{de:'Liter im Kanister (1 Kanister)', ru:'Литры в канистре (1 канистра)'},
+    karteHint:{de:'K16 = Beleg …2172, K6 = …6967. Bei Tankwagen nicht nötig.', ru:'K16 = чек …2172, K6 = …6967. Для бочки не нужно.'},
+    lBemerkung:{de:'Bemerkung (optional)', ru:'Примечание (необязательно)'},
+    needKarte:{de:'Bitte Kartennummer eintragen.', ru:'Укажите номер карты.'},
+    needBrigade:{de:'Bitte Brigade auswählen.', ru:'Выберите бригаду.'},
+    zaehlerZurueck:{de:'Der Stundenzähler ist kleiner als bei der letzten Ausgabe an diese Brigade. Bitte prüfen.', ru:'Моточасы меньше, чем при прошлой выдаче этой бригаде. Проверьте.'},
+    calcFirst:{de:'Erste Ausgabe an diese Brigade – noch kein Vergleich möglich.', ru:'Первая выдача этой бригаде – сравнения пока нет.'},
+    calcLast:{de:'Letzte Ausgabe', ru:'Прошлая выдача'},
+    calcSeit:{de:'Seitdem', ru:'С тех пор'},
+    calcTage:{de:'Tage', ru:'дн.'},
+    calcStd:{de:'Std', ru:'ч'},
+    calcArbeit:{de:'Bagger gearbeitet', ru:'Экскаватор отработал'},
+    calcVerbrauch:{de:'Verbrauch (Liter der letzten Ausgabe, Annahme: aufgebraucht)', ru:'Расход (литры прошлой выдачи, предположительно израсходованы)'},
+    calcProTag:{de:'l pro Tag', ru:'л в день'},
+    calcProStd:{de:'l pro Bagger-Stunde', ru:'л на моточас'},
+    twVorbelegt:{de:'aus letztem Tankwagen-Ende übernommen', ru:'взято из последнего остатка бочки'},
+    zeitraum:{de:'Zeitraum', ru:'Период'},
+    kanisterTitle:{de:'Kanister je Brigade', ru:'Канистры по бригадам'}
   };
   var currentLang = (localStorage.getItem('tankprotokoll_lang') || 'de');
   function t(key){ return (L[key] && L[key][currentLang]) || (L[key] && L[key].de) || key; }
@@ -340,6 +425,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     document.querySelectorAll('.lang-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-lang') === currentLang);
     });
+    if(typeof fillFahrzeugListe === 'function' && document.getElementById('fahrzeug')) { try{ fillFahrzeugListe(); }catch(e){} }
     updateStandLabel();
   }
   document.querySelectorAll('.lang-btn').forEach(function(b){
@@ -391,30 +477,126 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   }
 
   // Maschinen mit Kilometerstand (alles andere -> Betriebsstunden)
-  var KM_MASCHINEN = ['LKW'];
+  var KM_MASCHINEN = ['LKW','Transporter','PKW'];
   function updateStandLabel(){
-    var istKm = KM_MASCHINEN.indexOf(machineEl.value) !== -1;
+    if(typeof currentMode !== 'undefined' && currentMode === 'kanister'){
+      standLabelEl.textContent = t('lZaehlerKanister');
+      standEl.placeholder = 'z. B. 4512,5';
+      var ml = document.querySelector('label[for="menge"]');
+      if(ml) ml.textContent = t('lMengeKanister');
+      return;
+    }
+    var ml2 = document.querySelector('label[for="menge"]');
+    if(ml2) ml2.textContent = t('lMenge');
+    var istKm = KM_MASCHINEN.indexOf(machineEl.value) !== -1 || (!machineEl.value && typeof currentCat !== 'undefined' && currentCat === 'fzg');
     standLabelEl.textContent = istKm ? t('lKilometerstand') : t('lBetriebsstunden');
     standEl.placeholder = istKm ? 'z. B. 185400' : 'z. B. 1234';
   }
-  // Kanister (Brigade): kein Seriennummer-/Betriebsstunden-Feld, stattdessen Brigade-Auswahl
+  // ---------- Fahrzeug- und Maschinenliste (Stand 10.11.2026) ----------
+  var FZG = ["MAN 460","MAN 544","MAN 456","MAN 454","MAN 477","MAN 230","MAN 665","VW 877","Sprinter 311","HET 1011","Vito 530","Vito 630","Ford 1889","Volvo 660","Opel 992","Skoda 2388","Fahrzeug 777"];
+  var MASCH = ["KAT 603214","KAT 603121","KAT 602721","Ratlader 3089087","Ratlader 3089161","Ratlader 3089166","Ratlader 3090621","Ratlader 3089112","Bagger ET18 E1202P07944","Bagger ET18 E1202K08013","Bagger ET18 E1202J08661","Bagger ET18 E1202C08726","Bagger ET18 E1202A09166","Bagger ET18 E1202J08840","Minibagger ET24 WNCE1204K00003444","Radlader 3080469","Radlader 3080534","Radlader 3085415","Radlader 3085426","Radlader 3086605","Minibagger 603414","Minibagger 603204"];
+  var UNBEST = ["Ratlader 3090621"];
+  // Maschinentyp wird vorbelegt und kann geändert werden
+  function typVon(name){
+    if(/^(MAN|HET|Volvo)\b/.test(name)) return 'LKW';
+    if(/^(Opel|Skoda|Fahrzeug)\b/.test(name)) return 'PKW';
+    if(FZG.indexOf(name) !== -1) return 'Transporter';
+    if(/^Minibagger/.test(name)) return 'Minibagger';
+    if(/^(Ratlader|Radlader)/.test(name)) return 'Radlader';
+    return 'Bagger';
+  }
+  var fahrzeugEl = document.getElementById('fahrzeug');
+  var fahrzeugBlock = document.getElementById('fahrzeug-block');
+  var machineWrap = document.getElementById('machine-wrap');
+  var kraftstoffEl = document.getElementById('kraftstoff');
+  var uhrzeitEl = document.getElementById('uhrzeit');
+  var bemerkungEl = document.getElementById('bemerkung');
+  var calcBox = document.getElementById('calc-box');
+  var baustellenListe = document.getElementById('baustellen-liste');
+  var currentMode = 'tanken';
+  var currentCat = localStorage.getItem('tankprotokoll_cat') || 'fzg';
+
+  function fillFahrzeugListe(){
+    var list = currentCat === 'masch' ? MASCH : FZG;
+    var keep = fahrzeugEl.value;
+    var html = '<option value="" disabled selected>' + escapeHtml(t('optChoose')) + '</option>';
+    list.forEach(function(n){
+      html += '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + (UNBEST.indexOf(n) !== -1 ? ' ' + escapeHtml(t('optUnbest')) : '') + '</option>';
+    });
+    html += '<option value="__andere">' + escapeHtml(t('optAndere')) + '</option>';
+    fahrzeugEl.innerHTML = html;
+    if(keep && (list.indexOf(keep) !== -1 || keep === '__andere')) fahrzeugEl.value = keep;
+    document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cat') === currentCat); });
+  }
+  fahrzeugEl.addEventListener('change', function(){
+    var v = fahrzeugEl.value;
+    if(v === '__andere'){
+      serialEl.value = '';
+      machineEl.value = currentCat === 'masch' ? 'Bagger' : 'LKW';
+      serialEl.focus();
+    } else if(v){
+      serialEl.value = v;
+      machineEl.value = typVon(v);
+    }
+    updateStandLabel();
+    saveDraft();
+  });
+  document.querySelectorAll('.cat-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      currentCat = b.getAttribute('data-cat');
+      try{ localStorage.setItem('tankprotokoll_cat', currentCat); }catch(e){}
+      fahrzeugEl.value = '';
+      serialEl.value = '';
+      machineEl.value = '';
+      fillFahrzeugListe();
+      updateStandLabel();
+    });
+  });
+
+  // Reiter: Tanken / Kanister an Brigade
+  function setMode(mode){
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode') === mode); });
+    if(mode === 'kanister'){
+      machineEl.value = 'Kanister';
+    } else if(machineEl.value === 'Kanister'){
+      machineEl.value = '';
+    }
+    updateMachineMode();
+  }
+  document.querySelectorAll('.mode-btn').forEach(function(b){
+    b.addEventListener('click', function(){ setMode(b.getAttribute('data-mode')); saveDraft(); });
+  });
+
+  // Kanister (Brigade): Brigade Pflicht, Stundenzähler im Bagger statt Seriennummer
   function updateMachineMode(){
-    var istKanister = machineEl.value === 'Kanister';
+    var istKanister = currentMode === 'kanister' || machineEl.value === 'Kanister';
+    if(istKanister && currentMode !== 'kanister'){
+      currentMode = 'kanister';
+      document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode') === 'kanister'); });
+      machineEl.value = 'Kanister';
+    }
     brigadeWrap.hidden = !istKanister;
+    fahrzeugBlock.hidden = istKanister;
+    machineWrap.hidden = istKanister;
     serialWrap.hidden = istKanister;
-    standWrap.hidden = istKanister;
+    standWrap.hidden = false;
     brigadeEl.required = istKanister;
     serialEl.required = !istKanister;
     standEl.required = !istKanister;
+    machineEl.required = !istKanister;
+    fahrzeugEl.required = !istKanister;
     if(istKanister){
       serialEl.value = '';
-      standEl.value = '';
+      fahrzeugEl.value = '';
     } else {
       brigadeEl.value = '';
+      calcBox.hidden = true;
     }
     updateStandLabel();
+    updateKanisterCalc();
   }
-  machineEl.addEventListener('change', updateMachineMode);
+  machineEl.addEventListener('change', function(){ updateMachineMode(); });
 
   // Tankquelle: Tankwagen (mit Anfang/Ende) vs. DKV-Karte (nur Menge)
   function updateTankquelle(){
@@ -422,6 +604,8 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     tankwagenWrap.hidden = !istTankwagen;
     diffBox.hidden = !istTankwagen;
     anfangEl.required = istTankwagen;
+    kartennummerEl.required = !istTankwagen;
+    if(istTankwagen && !anfangEl.value){ prefillTankwagenAnfang(); }
     if(!istTankwagen){
       anfangEl.value = '';
       endeEl.value = '';
@@ -437,11 +621,91 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   var exportBtn = document.getElementById('export-btn');
   var exportCsvBtn = document.getElementById('export-csv-btn');
   var exportPdfBtn = document.getElementById('export-pdf-btn');
-  updateTankquelle();
-  updateMachineMode();
-
   var currentPhotoDataUrl = null;
   var entriesCache = [];
+
+  // ---------- Tankwagen: Anfang = letztes Ende ----------
+  var twHint = document.createElement('span');
+  twHint.className = 'hint'; twHint.hidden = true;
+  function prefillTankwagenAnfang(){
+    supabase.rpc('last_tankwagen_ende').then(function(res){
+      var v = (!res.error && res.data != null) ? Number(res.data) : null;
+      if(v == null){
+        var own = entriesCache.filter(function(e){ return e.tankquelle === 'Tankwagen' && e.tankwagen_ende != null; });
+        if(own.length) v = Number(own[0].tankwagen_ende);
+      }
+      if(v != null && isFinite(v) && !anfangEl.value && tankquelleEl.value === 'Tankwagen'){
+        anfangEl.value = String(v).replace('.', ',');
+        twHint.textContent = t('twVorbelegt'); twHint.hidden = false;
+        if(!twHint.parentNode) anfangEl.parentNode.appendChild(twHint);
+        updateDiff(); saveDraft();
+      }
+    });
+  }
+
+  // ---------- Kanister: Berechnung seit der letzten Ausgabe an dieselbe Brigade ----------
+  var kanisterVor = null; // {datum, uhrzeit, menge_liter, betriebsstunden}
+  var kanisterVorFor = null;
+  var kanisterCalc = null;
+  function fetchKanisterVor(brigade, cb){
+    supabase.rpc('last_kanister', { p_brigade: brigade }).then(function(res){
+      if(!res.error){ cb((res.data && res.data[0]) || null); return; }
+      var own = entriesCache.filter(function(e){ return e.maschine === 'Kanister' && (e.brigade === brigade || e.seriennummer === brigade); });
+      cb(own[0] || null);
+    });
+  }
+  function fmtNum(n, d){ return Number(n).toLocaleString('de-DE', {maximumFractionDigits: d == null ? 1 : d}); }
+  function updateKanisterCalc(){
+    kanisterCalc = null;
+    if(currentMode !== 'kanister' || !brigadeEl.value){ calcBox.hidden = true; return; }
+    var b = brigadeEl.value;
+    if(kanisterVorFor !== b){
+      kanisterVorFor = b; kanisterVor = undefined;
+      fetchKanisterVor(b, function(row){ if(kanisterVorFor === b){ kanisterVor = row; updateKanisterCalc(); } });
+      return;
+    }
+    if(kanisterVor === undefined) return;
+    if(!kanisterVor){
+      calcBox.innerHTML = escapeHtml(t('calcFirst'));
+      calcBox.hidden = false; return;
+    }
+    var jetzt = new Date(datumEl.value + 'T' + (uhrzeitEl.value || '12:00'));
+    var vor = new Date(kanisterVor.datum + 'T' + (kanisterVor.uhrzeit || '12:00'));
+    var stunden = (jetzt - vor) / 36e5;
+    var tage = stunden / 24;
+    var vorLiter = Number(kanisterVor.menge_liter);
+    var z = toNum(standEl.value);
+    var arbeit = (isFinite(z) && kanisterVor.betriebsstunden != null) ? Math.round((z - Number(kanisterVor.betriebsstunden)) * 10) / 10 : null;
+    kanisterCalc = {
+      vorDatum: kanisterVor.datum,
+      tage: isFinite(tage) ? Math.round(tage * 10) / 10 : null,
+      vorLiter: isFinite(vorLiter) ? vorLiter : null,
+      arbeit: arbeit,
+      lProStd: (arbeit != null && arbeit > 0 && isFinite(vorLiter)) ? Math.round(vorLiter / arbeit * 100) / 100 : null,
+      zurueck: arbeit != null && arbeit < 0
+    };
+    var html = '<b>' + escapeHtml(t('calcLast')) + ':</b> ' + fmtDate(kanisterVor.datum) + (kanisterVor.uhrzeit ? ' ' + escapeHtml(kanisterVor.uhrzeit) : '') +
+      ' · ' + fmtNum(vorLiter) + ' l' + (kanisterVor.betriebsstunden != null ? ' · ' + fmtNum(kanisterVor.betriebsstunden) + ' ' + t('calcStd') : '') + '<br>';
+    if(kanisterCalc.tage != null && kanisterCalc.tage >= 0){
+      html += '<b>' + escapeHtml(t('calcSeit')) + ':</b> ' + fmtNum(kanisterCalc.tage) + ' ' + t('calcTage') + ' (' + fmtNum(stunden, 0) + ' ' + t('calcStd') + ')<br>';
+      if(kanisterCalc.tage > 0 && isFinite(vorLiter)) html += escapeHtml(t('calcVerbrauch')) + ': <b>' + fmtNum(vorLiter / kanisterCalc.tage, 2) + ' ' + escapeHtml(t('calcProTag')) + '</b><br>';
+    }
+    if(kanisterCalc.zurueck){
+      html += '<span class="err" style="display:block">' + escapeHtml(t('zaehlerZurueck')) + '</span>';
+    } else if(arbeit != null){
+      html += '<b>' + escapeHtml(t('calcArbeit')) + ':</b> ' + fmtNum(arbeit) + ' ' + t('calcStd') +
+        (kanisterCalc.lProStd != null ? ' · <b>' + fmtNum(kanisterCalc.lProStd, 2) + ' ' + escapeHtml(t('calcProStd')) + '</b>' : '');
+    }
+    calcBox.innerHTML = html; calcBox.hidden = false;
+  }
+  brigadeEl.addEventListener('change', updateKanisterCalc);
+  standEl.addEventListener('input', updateKanisterCalc);
+  datumEl.addEventListener('input', updateKanisterCalc);
+  uhrzeitEl.addEventListener('input', updateKanisterCalc);
+
+  fillFahrzeugListe();
+  updateTankquelle();
+  updateMachineMode();
 
   // ---------- Login ----------
   loginForm.addEventListener('submit', function(ev){
@@ -479,6 +743,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     loginScreen.style.display = 'none';
     appEl.style.display = 'block';
     datumEl.value = todayISO();
+    uhrzeitEl.value = nowHM();
     fillMitarbeiterFromSession(session);
     updateMachineMode();
     loadEntries();
@@ -498,18 +763,43 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     });
   }
 
+  // Kontrolle ab 10.11.2026, Ampel/Zeitraum je 2 Wochen (Z1 = 10.11.–23.11.2026)
+  var KONTROLL_BEGINN = '2026-11-10';
+  function zeitraumVon(iso){
+    var b = new Date(KONTROLL_BEGINN + 'T00:00:00'), d = new Date(String(iso) + 'T00:00:00');
+    var n = Math.floor(Math.round((d - b) / 864e5) / 14);
+    if(!isFinite(n) || n < 0) return null;
+    var s = new Date(b); s.setDate(s.getDate() + n * 14);
+    var e = new Date(s); e.setDate(e.getDate() + 13);
+    function iso2(x){ return x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0'); }
+    return { nr: n + 1, start: iso2(s), ende: iso2(e) };
+  }
+  function zeitraumText(iso){
+    var z = zeitraumVon(iso);
+    return z ? ('Z' + z.nr + ' ' + fmtDate(z.start) + '–' + fmtDate(z.ende)) : 'vor Kontrollbeginn';
+  }
   function renderAuswertung(){
-    var cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 14);
-    supabase.from('entries').select('maschine,seriennummer,betriebsstunden,kilometerstand,datum,created_at')
-      .gte('created_at', cutoff.toISOString())
-      .order('created_at', { ascending: true })
+    var z = zeitraumVon(todayISO()) || zeitraumVon(KONTROLL_BEGINN);
+    supabase.from('entries').select('maschine,seriennummer,betriebsstunden,kilometerstand,datum,created_at,brigade,menge_liter')
+      .gte('datum', z.start).lte('datum', z.ende)
+      .order('datum', { ascending: true }).order('created_at', { ascending: true })
       .then(function(res){
         if(res.error){
           auswertungEl.innerHTML = '<p>' + escapeHtml(res.error.message) + '</p>';
           return;
         }
         var rows = res.data || [];
+        var kopf = '<p class="muted"><b>' + t('zeitraum') + ' ' + escapeHtml(zeitraumText(z.start)) + '</b></p>';
+        var kan = rows.filter(function(r){ return r.maschine === 'Kanister'; });
+        rows = rows.filter(function(r){ return r.maschine !== 'Kanister'; });
+        var kanHtml = '';
+        if(kan.length){
+          var kb = {};
+          kan.forEach(function(r){ var k = r.brigade || r.seriennummer; if(!kb[k]) kb[k] = {l:0,n:0}; kb[k].l += Number(r.menge_liter)||0; kb[k].n++; });
+          kanHtml = '<h2 style="margin-top:18px">' + t('kanisterTitle') + '</h2><table class="auswertung-table"><tbody>' +
+            Object.keys(kb).sort().map(function(k){ return '<tr><td><b>' + escapeHtml(k) + '</b></td><td>' + fmtNum(kb[k].l) + ' l</td><td class="muted">' + kb[k].n + 'x</td></tr>'; }).join('') +
+            '</tbody></table>';
+        }
         // Gruppieren nach Maschine + Seriennummer
         var groups = {};
         rows.forEach(function(r){
@@ -519,11 +809,11 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         });
         var keys = Object.keys(groups);
         if(keys.length === 0){
-          auswertungEl.innerHTML = '<p>' + t('auswertungEmpty') + '</p>';
+          auswertungEl.innerHTML = kopf + '<p>' + t('auswertungEmpty') + '</p>' + kanHtml;
           return;
         }
-        var isKmMachine = function(m){ return m === 'LKW'; };
-        var html = '<table class="auswertung-table"><tbody>';
+        var isKmMachine = function(m){ return KM_MASCHINEN.indexOf(m) !== -1; };
+        var html = kopf + '<table class="auswertung-table"><tbody>';
         keys.sort().forEach(function(key){
           var g = groups[key];
           var list = g.einträge;
@@ -541,7 +831,7 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
             '<td class="muted">' + t('auswertungVon') + ' ' + fmtDate(first.datum) + ' ' + t('auswertungBis') + ' ' + fmtDate(last.datum) + ' · ' + list.length + 'x</td>' +
             '</tr>';
         });
-        html += '</tbody></table>';
+        html += '</tbody></table>' + kanHtml;
         auswertungEl.innerHTML = html;
       });
   }
@@ -575,6 +865,10 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       .subscribe();
   }
 
+  function nowHM(){
+    var d = new Date();
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
   function todayISO(){
     var d = new Date();
     var m = String(d.getMonth()+1).padStart(2,'0');
@@ -583,13 +877,14 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   }
 
   // ---------- Entwurf-Sicherung (gegen Reload-Datenverlust) ----------
-  var DRAFT_KEY = 'tankprotokoll_draft_v2';
+  var DRAFT_KEY = 'tankprotokoll_draft_v3';
   // mitarbeiterEl bewusst nicht im Entwurf: der Name kommt immer aus dem Login, nie aus einem gespeicherten Entwurf
-  var draftFields = [datumEl, baustelleEl, tankquelleEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl, brigadeEl];
+  var draftFields = [datumEl, uhrzeitEl, baustelleEl, tankquelleEl, fahrzeugEl, machineEl, serialEl, standEl, mengeEl, kartennummerEl, anfangEl, endeEl, brigadeEl, kraftstoffEl, bemerkungEl];
   function saveDraft(){
     try{
       var draft = {};
       draftFields.forEach(function(el){ draft[el.id] = el.value; });
+      draft._mode = currentMode;
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     }catch(e){}
   }
@@ -600,15 +895,19 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       if(!raw) return;
       var draft = JSON.parse(raw);
       var hasContent = false;
+      if(draft._mode === 'kanister') setMode('kanister');
       draftFields.forEach(function(el){
         if(draft[el.id]){
           el.value = draft[el.id];
-          if(el.id !== 'datum') hasContent = true;
+          if(el.id !== 'datum' && el.id !== 'uhrzeit' && el.id !== 'kraftstoff') hasContent = true;
         }
       });
       if(hasContent){
+        var m = machineEl.value, sv = serialEl.value, fz = fahrzeugEl.value, br = brigadeEl.value;
         updateDiff();
         updateMachineMode();
+        if(currentMode !== 'kanister'){ machineEl.value = m; serialEl.value = sv; fahrzeugEl.value = fz; } else { brigadeEl.value = br; }
+        updateStandLabel(); updateKanisterCalc();
         updateTankquelle();
         okEl.textContent = t('draftMsg');
         okEl.hidden = false;
@@ -721,6 +1020,10 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
   function render(){
     var entries = entriesCache;
+    var seen = {};
+    baustellenListe.innerHTML = entries.map(function(e){ return (e.baustelle || '').trim(); })
+      .filter(function(b){ if(!b || seen[b.toLowerCase()]) return false; seen[b.toLowerCase()] = 1; return true; })
+      .slice(0, 30).map(function(b){ return '<option value="' + escapeHtml(b) + '">'; }).join('');
     renderSummary(entries);
     if(entries.length === 0){
       listEl.innerHTML = '<p class="empty">' + t('noEntries') + '</p>';
@@ -736,10 +1039,12 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       return '<div class="entry">' +
         '<div class="left">' +
           '<span class="top">' + escapeHtml(en.maschine) + ' · ' + escapeHtml(en.seriennummer) + '</span>' +
-          '<span class="bottom">' + fmtDate(en.datum) + ' — ' + escapeHtml(en.baustelle) + ' · ' + escapeHtml(tqLabel[en.tankquelle] || en.tankquelle || '–') +
+          '<span class="bottom">' + fmtDate(en.datum) + (en.uhrzeit ? ' ' + escapeHtml(en.uhrzeit) : '') + ' — ' + escapeHtml(en.baustelle) + ' · ' + escapeHtml(tqLabel[en.tankquelle] || en.tankquelle || '–') +
             (en.kartennummer ? ' · Karte ' + escapeHtml(en.kartennummer) : '') +
             (standStr ? ' · ' + standStr : '') +
-            (en.mitarbeiter ? ' · ' + escapeHtml(en.mitarbeiter) : '') + '</span>' +
+            (en.kraftstoff ? ' · ' + escapeHtml(en.kraftstoff) : '') +
+            (en.mitarbeiter ? ' · ' + escapeHtml(en.mitarbeiter) : '') +
+            (en.bemerkung ? ' · „' + escapeHtml(en.bemerkung) + '“' : '') + '</span>' +
         '</div>' +
         (photoUrl ? '<img class="thumb" src="' + photoUrl + '" alt="Lieferschein" data-full="' + photoUrl + '">' : '') +
         '<div class="amount">' + Number(en.menge_liter).toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l</div>' +
@@ -760,6 +1065,9 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
   function resetForm(){
     baustelleEl.value = ''; tankquelleEl.value = ''; machineEl.value = ''; serialEl.value = ''; standEl.value = ''; mengeEl.value = '';
     kartennummerEl.value = ''; anfangEl.value = ''; endeEl.value = ''; diffOut.textContent = '–'; brigadeEl.value = '';
+    fahrzeugEl.value = ''; bemerkungEl.value = ''; twHint.hidden = true; kanisterVorFor = null;
+    uhrzeitEl.value = nowHM();
+    if(currentMode === 'kanister') machineEl.value = 'Kanister';
     updateMachineMode();
     updateTankquelle();
     clearPhoto(); clearDraft(); baustelleEl.focus();
@@ -777,21 +1085,33 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
     var machine = machineEl.value;
     var istKanister = machine === 'Kanister';
     var brigade = brigadeEl.value;
-    var serial = istKanister ? ('Brigade ' + brigade) : serialEl.value.trim();
-    var stand = istKanister ? NaN : toNum(standEl.value);
+    var serial = istKanister ? brigade : serialEl.value.trim();
+    var stand = toNum(standEl.value);
+    var uhrzeit = uhrzeitEl.value;
+    var bemerkung = bemerkungEl.value.trim();
     var istKm = KM_MASCHINEN.indexOf(machine) !== -1;
     var menge = toNum(mengeEl.value);
     var kartennummer = kartennummerEl.value.trim();
     var anfang = istTankwagen ? toNum(anfangEl.value) : null;
     var ende = istTankwagen ? toNum(endeEl.value) : null;
 
-    if(!mitarbeiter || !datum || !baustelle || !tankquelle || !machine || !isFinite(menge) || !kartennummer){
+    if(!mitarbeiter || !datum || !uhrzeit || !baustelle || !tankquelle || !machine || !isFinite(menge)){
       errEl.textContent = t('fillAll');
       errEl.hidden = false;
       return;
     }
+    if(!istTankwagen && !kartennummer){
+      errEl.textContent = t('needKarte');
+      errEl.hidden = false;
+      return;
+    }
+    if(istKanister && kanisterCalc && kanisterCalc.zurueck){
+      errEl.textContent = t('zaehlerZurueck');
+      errEl.hidden = false;
+      return;
+    }
     if(istKanister && !brigade){
-      errEl.textContent = t('fillAll');
+      errEl.textContent = t('needBrigade');
       errEl.hidden = false;
       return;
     }
@@ -840,11 +1160,20 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
       return supabase.from('entries').insert({
         datum: datum, mitarbeiter: mitarbeiter, baustelle: baustelle, tankquelle: tankquelle,
         maschine: machine, seriennummer: serial,
-        betriebsstunden: (istKanister || istKm) ? null : stand,
-        kilometerstand: (!istKanister && istKm) ? stand : null,
-        menge_liter: menge, kartennummer: kartennummer,
+        betriebsstunden: (istKanister || !istKm) && isFinite(stand) ? stand : null,
+        kilometerstand: (!istKanister && istKm && isFinite(stand)) ? stand : null,
+        menge_liter: menge, kartennummer: kartennummer || null,
         tankwagen_anfang: anfang, tankwagen_ende: ende,
-        lieferschein_path: photoPath
+        lieferschein_path: photoPath,
+        uhrzeit: uhrzeit,
+        bemerkung: bemerkung || null,
+        brigade: istKanister ? brigade : null,
+        kraftstoff: istKanister ? kraftstoffEl.value : null,
+        kanister_vor_datum: (istKanister && kanisterCalc) ? kanisterCalc.vorDatum : null,
+        kanister_tage: (istKanister && kanisterCalc) ? kanisterCalc.tage : null,
+        kanister_vor_liter: (istKanister && kanisterCalc) ? kanisterCalc.vorLiter : null,
+        kanister_arbeitsstunden: (istKanister && kanisterCalc) ? kanisterCalc.arbeit : null,
+        kanister_l_pro_std: (istKanister && kanisterCalc) ? kanisterCalc.lProStd : null
       });
     }).then(function(res){
       if(res.error){
@@ -865,7 +1194,9 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
         standText(en) ? ('Zähler: ' + standText(en)) : '',
         'Menge: '+en.menge_liter+' l', 'Karte: '+en.kartennummer,
         en.tankquelle === 'Tankwagen' ? ('Anfang: '+en.tankwagen_anfang+' l | Ende: '+en.tankwagen_ende+' l') : '',
-        en.lieferschein_path ? 'Beleg: ja' : 'Beleg: nein'].filter(Boolean).join(' | ');
+        en.lieferschein_path ? 'Beleg: ja' : 'Beleg: nein',
+        en.uhrzeit ? 'Uhrzeit: ' + en.uhrzeit : '', en.brigade ? 'Brigade: ' + en.brigade : '', en.kraftstoff || '',
+        en.bemerkung ? 'Bemerkung: ' + en.bemerkung : ''].filter(Boolean).join(' | ');
     });
     var text = lines.join('\n');
     function fallbackSelect(){
@@ -891,11 +1222,13 @@ h2{font-size:18px;margin:0 0 12px;font-weight:800}
 
   exportCsvBtn.addEventListener('click', function(){
     var entries = entriesCache;
-    var header = ['Datum','Mitarbeiter','Baustelle','Tankquelle','Maschine','Seriennummer','Betriebsstunden','Kilometerstand','Menge (l)','Kartennummer','Anfang (l)','Ende (l)','Beleg vorhanden'];
+    var header = ['Datum','Mitarbeiter','Baustelle','Tankquelle','Maschine','Seriennummer','Betriebsstunden','Kilometerstand','Menge (l)','Kartennummer','Anfang (l)','Ende (l)','Beleg vorhanden','Uhrzeit','Zeitraum','Brigade','Kraftstoff','Tage seit letzter Ausgabe','Bagger-Std seit letzter Ausgabe','l pro Bagger-Std','Bemerkung'];
     var rows = entries.map(function(en){
       return [fmtDate(en.datum), en.mitarbeiter, en.baustelle, tqLabel[en.tankquelle] || en.tankquelle, en.maschine, en.seriennummer,
         en.betriebsstunden, en.kilometerstand, en.menge_liter, en.kartennummer, en.tankwagen_anfang, en.tankwagen_ende,
-        en.lieferschein_path ? 'ja' : 'nein']
+        en.lieferschein_path ? 'ja' : 'nein',
+        en.uhrzeit || '', zeitraumText(en.datum), en.brigade || '', en.kraftstoff || '',
+        en.kanister_tage, en.kanister_arbeitsstunden, en.kanister_l_pro_std, en.bemerkung || '']
         .map(csvCell).join(';');
     });
     var csv = header.join(';') + '\n' + rows.join('\n');
