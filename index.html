@@ -676,7 +676,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     var stunden = (jetzt - vor) / 36e5;
     var tage = stunden / 24;
     var vorLiter = Number(kanisterVor.menge_liter);
-    var z = toNum(standEl.value);
+    var z = currentMode === 'kanister' ? NaN : toNum(standEl.value);
     var arbeit = (isFinite(z) && kanisterVor.betriebsstunden != null) ? Math.round((z - Number(kanisterVor.betriebsstunden)) * 10) / 10 : null;
     kanisterCalc = {
       vorDatum: kanisterVor.datum,
@@ -687,9 +687,9 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       zurueck: arbeit != null && arbeit < 0
     };
     var html = '<b>' + escapeHtml(t('calcLast')) + ':</b> ' + fmtDate(kanisterVor.datum) + (kanisterVor.uhrzeit ? ' ' + escapeHtml(kanisterVor.uhrzeit) : '') +
-      ' · ' + fmtNum(vorLiter) + ' l' + (kanisterVor.betriebsstunden != null ? ' · ' + fmtNum(kanisterVor.betriebsstunden) + ' ' + t('calcStd') : '') + '<br>';
+      ' · ' + fmtNum(vorLiter) + ' l<br>';
     if(kanisterCalc.tage != null && kanisterCalc.tage >= 0){
-      html += '<b>' + escapeHtml(t('calcSeit')) + ':</b> ' + fmtNum(kanisterCalc.tage) + ' ' + t('calcTage') + ' (' + fmtNum(stunden, 0) + ' ' + t('calcStd') + ')<br>';
+      html += '<b>' + escapeHtml(t('calcSeit')) + ':</b> ' + fmtNum(kanisterCalc.tage) + ' ' + t('calcTage') + '<br>';
       if(kanisterCalc.tage > 0 && isFinite(vorLiter)) html += escapeHtml(t('calcVerbrauch')) + ': <b>' + fmtNum(vorLiter / kanisterCalc.tage, 2) + ' ' + escapeHtml(t('calcProTag')) + '</b><br>';
     }
     if(kanisterCalc.zurueck){
