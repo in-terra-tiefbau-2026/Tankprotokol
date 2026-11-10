@@ -403,7 +403,11 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     needKarte:{de:'Bitte Kartennummer eintragen.', ru:'Укажите номер карты.'},
     needBrigade:{de:'Bitte Brigade auswählen.', ru:'Выберите бригаду.'},
     zaehlerZurueck:{de:'Der Stundenzähler ist kleiner als bei der letzten Ausgabe an diese Brigade. Bitte prüfen.', ru:'Моточасы меньше, чем при прошлой выдаче этой бригаде. Проверьте.'},
-    calcFirst:{de:'Erste Ausgabe an diese Brigade – noch kein Vergleich möglich.', ru:'Первая выдача этой бригаде – сравнения пока нет.'},
+    calcFirst:{de:'Erste Befüllung für diese Brigade – noch keine frühere vorhanden.', ru:'Первая заправка канистры для этой бригады – раньше не было.'},
+    calcVor:{de:'Letzte Befüllung vor', ru:'Последняя заправка канистры'},
+    calcHeute:{de:'0 Tagen (heute)', ru:'сегодня'},
+    calcTag1:{de:'Tag', ru:'день назад'},
+    calcTageN:{de:'Tagen', ru:'дн. назад'},
     calcLast:{de:'Letzte Ausgabe', ru:'Прошлая выдача'},
     calcSeit:{de:'Seitdem', ru:'С тех пор'},
     calcTage:{de:'Tage', ru:'дн.'},
@@ -686,18 +690,12 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       lProStd: (arbeit != null && arbeit > 0 && isFinite(vorLiter)) ? Math.round(vorLiter / arbeit * 100) / 100 : null,
       zurueck: arbeit != null && arbeit < 0
     };
-    var html = '<b>' + escapeHtml(t('calcLast')) + ':</b> ' + fmtDate(kanisterVor.datum) + (kanisterVor.uhrzeit ? ' ' + escapeHtml(kanisterVor.uhrzeit) : '') +
-      ' · ' + fmtNum(vorLiter) + ' l<br>';
-    if(kanisterCalc.tage != null && kanisterCalc.tage >= 0){
-      html += '<b>' + escapeHtml(t('calcSeit')) + ':</b> ' + fmtNum(kanisterCalc.tage) + ' ' + t('calcTage') + '<br>';
-      if(kanisterCalc.tage > 0 && isFinite(vorLiter)) html += escapeHtml(t('calcVerbrauch')) + ': <b>' + fmtNum(vorLiter / kanisterCalc.tage, 2) + ' ' + escapeHtml(t('calcProTag')) + '</b><br>';
-    }
-    if(kanisterCalc.zurueck){
-      html += '<span class="err" style="display:block">' + escapeHtml(t('zaehlerZurueck')) + '</span>';
-    } else if(arbeit != null){
-      html += '<b>' + escapeHtml(t('calcArbeit')) + ':</b> ' + fmtNum(arbeit) + ' ' + t('calcStd') +
-        (kanisterCalc.lProStd != null ? ' · <b>' + fmtNum(kanisterCalc.lProStd, 2) + ' ' + escapeHtml(t('calcProStd')) + '</b>' : '');
-    }
+    // Nur anzeigen: vor wie vielen Tagen der Kanister dieser Brigade zuletzt befüllt wurde
+    var heute0 = new Date(datumEl.value + 'T00:00:00'), vor0 = new Date(kanisterVor.datum + 'T00:00:00');
+    var tageKal = Math.round((heute0 - vor0) / 864e5);
+    var html = '<span style="font-size:18px"><b>' + escapeHtml(t('calcVor')) + ' ' +
+      (tageKal === 0 ? escapeHtml(t('calcHeute')) : fmtNum(tageKal, 0) + ' ' + escapeHtml(tageKal === 1 ? t('calcTag1') : t('calcTageN'))) +
+      '</b></span><br><span class="muted">' + fmtDate(kanisterVor.datum) + (kanisterVor.uhrzeit ? ' ' + escapeHtml(kanisterVor.uhrzeit) : '') + ' · ' + fmtNum(vorLiter) + ' l</span>';
     calcBox.innerHTML = html; calcBox.hidden = false;
   }
   brigadeEl.addEventListener('change', updateKanisterCalc);
