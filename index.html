@@ -591,7 +591,12 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     standEl.required = !istKanister;
     machineEl.required = !istKanister;
     fahrzeugEl.required = !istKanister;
+    // Kanister: Datum/Uhrzeit = jetzt, nicht änderbar (Tage seit letzter Befüllung werden daraus berechnet)
+    datumEl.readOnly = istKanister;
+    uhrzeitEl.readOnly = istKanister;
     if(istKanister){
+      datumEl.value = todayISO();
+      uhrzeitEl.value = nowHM();
       serialEl.value = '';
       fahrzeugEl.value = '';
       standEl.value = '';
@@ -675,7 +680,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       calcBox.innerHTML = escapeHtml(t('calcFirst'));
       calcBox.hidden = false; return;
     }
-    var jetzt = new Date(datumEl.value + 'T' + (uhrzeitEl.value || '12:00'));
+    var jetzt = new Date();
     var vor = new Date(kanisterVor.datum + 'T' + (kanisterVor.uhrzeit || '12:00'));
     var stunden = (jetzt - vor) / 36e5;
     var tage = stunden / 24;
@@ -691,8 +696,9 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       zurueck: arbeit != null && arbeit < 0
     };
     // Nur anzeigen: vor wie vielen Tagen der Kanister dieser Brigade zuletzt befüllt wurde
-    var heute0 = new Date(datumEl.value + 'T00:00:00'), vor0 = new Date(kanisterVor.datum + 'T00:00:00');
+    var heute0 = new Date(todayISO() + 'T00:00:00'), vor0 = new Date(kanisterVor.datum + 'T00:00:00');
     var tageKal = Math.round((heute0 - vor0) / 864e5);
+    kanisterCalc.tage = tageKal;
     var html = '<span style="font-size:18px"><b>' + escapeHtml(t('calcVor')) + ' ' +
       (tageKal === 0 ? escapeHtml(t('calcHeute')) : fmtNum(tageKal, 0) + ' ' + escapeHtml(tageKal === 1 ? t('calcTag1') : t('calcTageN'))) +
       '</b></span><br><span class="muted">' + fmtDate(kanisterVor.datum) + (kanisterVor.uhrzeit ? ' ' + escapeHtml(kanisterVor.uhrzeit) : '') + ' · ' + fmtNum(vorLiter) + ' l</span>';

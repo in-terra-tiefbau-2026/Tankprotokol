@@ -1,7 +1,7 @@
 // Minimaler Service Worker: lädt die App-Hülle auch bei kurzzeitig schlechtem Netz auf der Baustelle.
 // Gespeicherte Daten selbst kommen weiterhin live von Supabase, sobald wieder Netz da ist.
 // Strategie: Netzwerk zuerst (damit Code-Änderungen sofort ankommen), Cache nur als Rückfalloption bei schlechtem/keinem Netz.
-var CACHE = 'tankprotokoll-shell-v6';
+var CACHE = 'tankprotokoll-shell-v7';
 var SHELL = ['./index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', function(event){
