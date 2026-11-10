@@ -230,6 +230,11 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
         <input type="text" inputmode="decimal" id="stand" placeholder="z. B. 1234" required>
       </div>
       <div class="calc-box" id="calc-box" hidden></div>
+      <div id="erst-wrap" hidden>
+        <label for="erst-datum" data-i18n="lErstDatum">Datum der letzten Kanister-Befüllung (bisher)</label>
+        <input type="date" id="erst-datum">
+        <span class="hint" data-i18n="erstHint">Nur beim ersten Eintrag für diese Brigade nötig. Danach rechnet die App automatisch.</span>
+      </div>
 
       <label for="menge" data-i18n="lMenge">Betankungsmenge (Liter)</label>
       <input type="text" inputmode="decimal" id="menge" placeholder="z. B. 15" required>
@@ -403,8 +408,10 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     needKarte:{de:'Bitte Kartennummer eintragen.', ru:'Укажите номер карты.'},
     needBrigade:{de:'Bitte Brigade auswählen.', ru:'Выберите бригаду.'},
     zaehlerZurueck:{de:'Der Stundenzähler ist kleiner als bei der letzten Ausgabe an diese Brigade. Bitte prüfen.', ru:'Моточасы меньше, чем при прошлой выдаче этой бригаде. Проверьте.'},
-    calcFirst:{de:'Erste Befüllung für diese Brigade – noch keine frühere vorhanden.', ru:'Первая заправка канистры для этой бригады – раньше не было.'},
+    calcFirst:{de:'Erster Eintrag für diese Brigade – bitte darunter das Datum der letzten Befüllung eintragen.', ru:'Первая запись для этой бригады – укажите ниже дату последней заправки канистры.'},
     calcVor:{de:'Letzte Befüllung vor', ru:'Последняя заправка канистры'},
+    lErstDatum:{de:'Datum der letzten Kanister-Befüllung (bisher)', ru:'Дата последней заправки канистры (до этого)'},
+    erstHint:{de:'Nur beim ersten Eintrag für diese Brigade nötig. Danach rechnet die App automatisch.', ru:'Нужно только при первой записи для бригады. Дальше приложение считает само.'},
     calcHeute:{de:'0 Tagen (heute)', ru:'сегодня'},
     calcTag1:{de:'Tag', ru:'день назад'},
     calcTageN:{de:'Tagen', ru:'дн. назад'},
@@ -668,7 +675,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   function fmtNum(n, d){ return Number(n).toLocaleString('de-DE', {maximumFractionDigits: d == null ? 1 : d}); }
   function updateKanisterCalc(){
     kanisterCalc = null;
-    if(currentMode !== 'kanister' || !brigadeEl.value){ calcBox.hidden = true; return; }
+    if(currentMode !== 'kanister' || !brigadeEl.value){ calcBox.hidden = true; erstWrap.hidden = true; return; }
     var b = brigadeEl.value;
     if(kanisterVorFor !== b){
       kanisterVorFor = b; kanisterVor = undefined;
@@ -677,9 +684,22 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     }
     if(kanisterVor === undefined) return;
     if(!kanisterVor){
+      // Erster Eintrag für diese Brigade: Datum der letzten Befüllung von Hand
+      erstWrap.hidden = false;
+      var ed = erstDatumEl.value;
+      if(ed){
+        var tk = Math.round((new Date(todayISO() + 'T00:00:00') - new Date(ed + 'T00:00:00')) / 864e5);
+        if(tk >= 0){
+          kanisterCalc = { vorDatum: ed, tage: tk, vorLiter: null, arbeit: null, lProStd: null, zurueck: false };
+          calcBox.innerHTML = '<span style="font-size:18px"><b>' + escapeHtml(t('calcVor')) + ' ' +
+            (tk === 0 ? escapeHtml(t('calcHeute')) : fmtNum(tk, 0) + ' ' + escapeHtml(tk === 1 ? t('calcTag1') : t('calcTageN'))) + '</b></span><br><span class="muted">' + fmtDate(ed) + '</span>';
+          calcBox.hidden = false; return;
+        }
+      }
       calcBox.innerHTML = escapeHtml(t('calcFirst'));
       calcBox.hidden = false; return;
     }
+    erstWrap.hidden = true;
     var jetzt = new Date();
     var vor = new Date(kanisterVor.datum + 'T' + (kanisterVor.uhrzeit || '12:00'));
     var stunden = (jetzt - vor) / 36e5;
@@ -704,7 +724,11 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       '</b></span><br><span class="muted">' + fmtDate(kanisterVor.datum) + (kanisterVor.uhrzeit ? ' ' + escapeHtml(kanisterVor.uhrzeit) : '') + ' · ' + fmtNum(vorLiter) + ' l</span>';
     calcBox.innerHTML = html; calcBox.hidden = false;
   }
-  brigadeEl.addEventListener('change', updateKanisterCalc);
+  var erstWrap = document.getElementById('erst-wrap');
+  var erstDatumEl = document.getElementById('erst-datum');
+  erstDatumEl.addEventListener('input', updateKanisterCalc);
+  erstDatumEl.addEventListener('change', updateKanisterCalc);
+  brigadeEl.addEventListener('change', function(){ erstDatumEl.value = ''; updateKanisterCalc(); });
   standEl.addEventListener('input', updateKanisterCalc);
   datumEl.addEventListener('input', updateKanisterCalc);
   uhrzeitEl.addEventListener('input', updateKanisterCalc);
@@ -1071,7 +1095,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   function resetForm(){
     baustelleEl.value = ''; tankquelleEl.value = ''; machineEl.value = ''; serialEl.value = ''; standEl.value = ''; mengeEl.value = '';
     kartennummerEl.value = ''; anfangEl.value = ''; endeEl.value = ''; diffOut.textContent = '–'; brigadeEl.value = '';
-    fahrzeugEl.value = ''; bemerkungEl.value = ''; twHint.hidden = true; kanisterVorFor = null;
+    fahrzeugEl.value = ''; bemerkungEl.value = ''; erstDatumEl.value = ''; twHint.hidden = true; kanisterVorFor = null;
     uhrzeitEl.value = nowHM();
     if(currentMode === 'kanister') machineEl.value = 'Kanister';
     updateMachineMode();
