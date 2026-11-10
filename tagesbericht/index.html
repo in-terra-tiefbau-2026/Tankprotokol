@@ -1,0 +1,1291 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="theme-color" content="#f2c200"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Tagesbericht"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Tagesbericht In Terra</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: eine Spalte wie ein Klemmbrett, oben Reiter "Erfassen" / "Alle Berichte", unten große Speichern-Taste */
+:root{
+  --bg:#eef0ec; --card:#ffffff; --ink:#1f2421; --muted:#5f665f; --line:#cfd4cc;
+  --accent:#f2c200; --accent-ink:#1f2421; --pipe:#2d6a4f; --danger:#b3261e; --ok:#2d6a4f;
+  --field:#f7f8f5;
+  --ln-offen:#e8590c; --ln-ab:#2b8a3e; --ln-draw:#1971c2; --ln-alt:#868e96; --halo:#ffffff;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#161a18; --card:#1f2421; --ink:#e8ebe6; --muted:#a3aaa2; --line:#363d38;
+  --accent:#f2c200; --accent-ink:#161a18; --pipe:#7fc8a0; --danger:#ff8a80; --ok:#7fc8a0; --field:#262c28;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#161a18; --card:#1f2421; --ink:#e8ebe6; --muted:#a3aaa2; --line:#363d38;
+  --accent:#f2c200; --accent-ink:#161a18; --pipe:#7fc8a0; --danger:#ff8a80; --ok:#7fc8a0; --field:#262c28;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+.wrap{max-width:640px;margin:0 auto;padding-block:0 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:700;font-size:1.7rem;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1 span{background:var(--accent);color:var(--accent-ink);padding:0 .25em;margin-right:.2em}
+.mode{font-size:.8rem;color:var(--muted)}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:var(--line);padding:4px;border-radius:10px}
+.tabs button{font:600 .95rem var(--f-body);border:0;border-radius:7px;padding:10px 8px;background:transparent;color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.tabs .count{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+section.view{padding-top:16px;display:grid;gap:14px}
+.group{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:14px}
+.group h2{font-family:var(--f-display);font-weight:600;font-size:.95rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+label{display:grid;gap:6px;font-weight:600;font-size:.95rem}
+label .hint{font-weight:400;color:var(--muted);font-size:.85rem}
+.req::after{content:" *";color:var(--danger)}
+input,textarea,select{font:inherit;font-weight:400;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:12px;width:100%;min-height:48px}
+textarea{min-height:96px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:380px){.row3{grid-template-columns:1fr 1fr}.row3 .pause{grid-column:span 2}}
+.kw{font-family:var(--f-mono);display:flex;align-items:center;min-height:48px;padding:0 12px;border:1px dashed var(--line);border-radius:8px;color:var(--ink)}
+.calc{font-size:.9rem;color:var(--muted)}
+.calc b{font-family:var(--f-mono);color:var(--ink)}
+
+.addname{display:grid;grid-template-columns:1fr auto;gap:8px}
+.btn{font:600 1rem var(--f-body);border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 16px;min-height:48px;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 12px;font-size:.95rem}
+.chip button{border:0;background:transparent;color:var(--muted);font-size:1.1rem;width:32px;height:32px;border-radius:50%;cursor:pointer}
+.empty-chips{color:var(--muted);font-size:.9rem}
+
+.stepper{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center}
+.stepper button{font:700 1.4rem var(--f-body);min-height:52px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
+.stepper input{text-align:center;font-family:var(--f-mono);font-size:1.3rem}
+
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg input{position:absolute;opacity:0;width:1px;height:1px;min-height:0}
+.seg label{display:flex;justify-content:center;align-items:center;min-height:52px;border:1px solid var(--line);border-radius:8px;background:var(--field);cursor:pointer}
+.seg input:checked+span{font-weight:700}
+.seg label:has(input:checked){background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg label:has(input:focus-visible){outline:3px solid var(--pipe);outline-offset:2px}
+
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.savebar .in{max-width:640px;margin:0 auto;display:grid;gap:6px}
+.save{font:700 1.15rem var(--f-display);letter-spacing:.04em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;min-height:56px;cursor:pointer}
+.save:disabled{opacity:.6}
+.msg{font-size:.9rem;min-height:1.2em;text-align:center}
+.msg.err{color:var(--danger)} .msg.ok{color:var(--ok)}
+.field-err input,.field-err textarea{border-color:var(--danger)}
+
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.filters label{font-size:.85rem}
+.report{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.report summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;gap:6px}
+.report summary::-webkit-details-marker{display:none}
+.rhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.rdate{font-family:var(--f-display);font-weight:700;font-size:1.25rem}
+.rkw{font-family:var(--f-mono);font-size:.8rem;background:var(--field);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.raddr{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.rmeta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:.9rem}
+.rmeta b{font-family:var(--f-mono);color:var(--ink);font-weight:500}
+.pill{font-size:.75rem;font-weight:600;border-radius:999px;padding:2px 8px;border:1px solid var(--line)}
+.pill.sa{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.rbody{border-top:1px dashed var(--line);padding:14px 16px;display:grid;gap:12px}
+.rbody dl{margin:0;display:grid;gap:10px}
+.rbody dt{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.rbody dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.more{font-size:.85rem;color:var(--pipe);font-weight:600}
+.report[open] .more{display:none}
+.note{font-size:.85rem;color:var(--muted);text-align:center}
+.voice{margin:0;display:flex;gap:10px;align-items:flex-start;font-size:.9rem;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.mic{flex:none;width:12px;height:18px;margin-top:2px;border:2px solid var(--pipe);border-radius:8px;position:relative}
+.mic::after{content:"";position:absolute;left:50%;bottom:-6px;width:2px;height:4px;background:var(--pipe);transform:translateX(-50%)}
+.schaden{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:12px;background:var(--field)}
+.schaden input{background:var(--card)}
+.schaden-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.schaden-head strong{font-family:var(--f-display);font-size:1.05rem;letter-spacing:.02em}
+.linkbtn{font:600 .9rem var(--f-body);background:transparent;border:0;color:var(--danger);min-height:44px;padding:0 4px;cursor:pointer}
+.row-sh{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.sub{display:grid;gap:10px}
+.question{font-weight:600;font-size:.95rem}
+.pill.ks{background:var(--danger);color:var(--card);border-color:var(--danger)}
+.ks-item{border-left:3px solid var(--danger);padding-left:10px}
+.upload{display:flex;justify-content:center;align-items:center;gap:8px;min-height:52px;border:2px dashed var(--line);border-radius:10px;background:var(--field);font-weight:600;cursor:pointer}
+.upload:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.upload input{position:absolute;opacity:0;width:1px;height:1px;min-height:0}
+.upload[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.files{display:grid;gap:8px}
+.file{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--card)}
+.file .thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:var(--field);display:flex;align-items:center;justify-content:center;font:600 .75rem var(--f-mono);color:var(--muted)}
+.file .fname{min-width:0;overflow-wrap:anywhere;font-size:.9rem}
+.file .fname small{display:block;color:var(--muted)}
+.attach{display:flex;flex-wrap:wrap;gap:8px}
+.attach a{display:flex;align-items:center;justify-content:center;width:84px;height:84px;border-radius:8px;border:1px solid var(--line);background:var(--field);overflow:hidden;color:var(--pipe);font:600 .75rem var(--f-body);text-align:center;text-decoration:none;padding:4px;overflow-wrap:anywhere}
+.attach img{width:100%;height:100%;object-fit:cover}
+.pv-tools{display:flex;align-items:center;gap:8px}
+.pv-tools button{font:700 1.2rem var(--f-body);width:48px;height:44px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
+.pv-tools span{font-family:var(--f-mono);font-size:.85rem;color:var(--muted);min-width:4.5em;text-align:center}
+.pv-scroll{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:8px;background:var(--field);-webkit-overflow-scrolling:touch}
+.pv-inner{position:relative;width:100%}
+.pv-inner img{display:block;width:100%;max-width:none;height:auto;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.pv-inner svg{position:absolute;inset:0;width:100%;height:100%}
+.pv-inner.drawing{cursor:crosshair}
+.pv{display:grid;gap:8px}
+.draw-tools{display:flex;flex-wrap:wrap;gap:8px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.strecke{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--field)}
+.strecke .row{align-items:end}
+.snum{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font:700 .8rem var(--f-mono);color:#fff;background:var(--ln-offen);flex:none}
+.snum.ab{background:var(--ln-ab)} .snum.neu{background:var(--ln-draw)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.sums{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sum b{display:block;font:600 1.4rem var(--f-mono)}
+.sum span{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.sitem{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;cursor:pointer}
+.sitem.sel{outline:3px solid var(--ln-draw);outline-offset:-1px}
+.sitem .sinfo{min-width:0;display:grid;gap:4px}
+.sitem .sactions{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pmeta{font-size:.9rem;color:var(--muted);overflow-wrap:anywhere}
+.pmeta a{color:var(--pipe);font-weight:600}
+.linkish{background:none;border:0;padding:0;font:600 .9rem var(--f-body);color:var(--pipe);cursor:pointer;text-decoration:underline;min-height:32px}
+.plan-neu{border:1px dashed var(--line);border-radius:10px;padding:0 12px}
+.plan-neu summary{cursor:pointer;font-weight:600;min-height:48px;display:flex;align-items:center}
+.plan-neu[open]{padding-bottom:12px}
+.plan-neu .inner{display:grid;gap:12px}
+.emptystate{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:24px;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.report{transition:border-color .15s}}
+/* Ergänzung Version 6: Reiter Urlaub */
+.tabs.vier{grid-template-columns:repeat(4,1fr)}
+.tabs.vier button{padding:10px 2px;font-size:.88rem}
+.uitem{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:4px}
+.uitem .uhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.uitem strong{font-family:var(--f-display);font-size:1.15rem;letter-spacing:.01em;min-width:0;overflow-wrap:anywhere}
+.uitem .udate{font-family:var(--f-mono);font-size:.9rem}
+.pill.jetzt{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pill.vorbei{color:var(--muted)}
+.uitem.alt{opacity:.7}
+#view-urlaub .row,#view-urlaub .filters,#view-urlaub .sums{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+#view-urlaub label,#view-urlaub input,#view-urlaub select{min-width:0}
+</style>
+
+<style>
+/* Ergänzung eigene Webseite: Anmeldung und Konto-Zeile */
+#tb-login{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding-block:calc(40px + env(safe-area-inset-top,0px)) 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#tb-login form{max-width:420px;margin:0 auto;display:grid;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+#tb-login h1{margin:0 0 4px}
+#tb-login p{margin:0;color:var(--muted);font-size:.95rem}
+.tb-konto{display:flex;gap:10px;align-items:center;font-size:.8rem;color:var(--muted);min-width:0}
+.tb-konto span{overflow-wrap:anywhere}
+.tb-konto button{font:600 .8rem var(--f-body);background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:4px 8px;min-height:32px;cursor:pointer}
+</style>
+<div id="tb-login">
+  <form id="tb-login-form" novalidate>
+    <h1><span>In Terra</span>Tagesbericht</h1>
+    <p>Bitte mit den Zugangsdaten von In Terra anmelden.</p>
+    <label for="tb-email">E-Mail<input id="tb-email" type="email" autocomplete="username" inputmode="email" required></label>
+    <label for="tb-pw">Passwort<input id="tb-pw" type="password" autocomplete="current-password" required></label>
+    <div class="msg" id="tb-login-msg" role="status"></div>
+    <button class="save" id="tb-login-btn" type="submit">Anmelden</button>
+  </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* Verbindung zur eigenen Datenbank (Supabase, Frankfurt). Stellt dieselben Funktionen bereit,
+   die die Seite im claude.ai-Artifact nutzt, damit der Tagesbericht selbst unverändert bleibt. */
+(function(){
+  var SUPABASE_URL = "https://xethtgkolxzksofrdgqj.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_cG128pYqWAc_xgE08jcODQ_OGn9VkPk";
+  var BUCKET = "dateien";
+  var $ = function(id){ return document.getElementById(id); };
+  if(!window.supabase || !window.supabase.createClient){
+    // Ohne Verbindung nie heimlich nur auf dem Handy speichern: Anmeldeseite bleibt stehen
+    window.claude = { use: function(){ return new Promise(function(){}); } };
+    var m0 = $("tb-login-msg"); m0.textContent = "Keine Verbindung zum Server. Bitte Internet prüfen und die Seite neu laden."; m0.className = "msg err";
+    $("tb-login-btn").disabled = true;
+    return;
+  }
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var bereit, sessionP = new Promise(function(r){ bereit = r; });
+  var chef = null, sitzung = null;
+
+  function tokenMerken(s){
+    try{ caches.open("tb-auth").then(function(c){ return c.put("./__token", new Response(JSON.stringify({ t: s ? s.access_token : null, url: SUPABASE_URL, key: SUPABASE_KEY }))); }).catch(function(){}); }catch(e){}
+  }
+  function fehler(e){
+    var m = (e && e.message) || "";
+    if(e && (e.code === "42501" || /row-level security|permission|not authorized|Unauthorized/i.test(m))) return { code: "invalid_argument", message: m };
+    if(/exceeded the maximum|too large|payload/i.test(m)) return { code: "too_large", message: m };
+    if(/mime|content type|invalid_mime/i.test(m)) return { code: "unsupported_type", message: m };
+    return { code: "unavailable", message: m };
+  }
+  function zufall(n, zeichen){ var a = new Uint8Array(n); crypto.getRandomValues(a); var s = ""; for(var i = 0; i < n; i++) s += zeichen[a[i] % zeichen.length]; return s; }
+  var neueId = function(){ return zufall(20, "abcdefghijklmnopqrstuvwxyz0123456789"); };
+  var neueDateiId = function(){ return zufall(32, "0123456789abcdef"); };
+
+  async function alleLaden(name){
+    var alle = [], von = 0;
+    for(;;){
+      var r = await sb.from("eintraege").select("id,daten").eq("sammlung", name).order("erstellt_am").range(von, von + 999);
+      if(r.error) throw fehler(r.error);
+      alle = alle.concat(r.data); if(r.data.length < 1000) return alle; von += 1000;
+    }
+  }
+  function sammlung(name){
+    return {
+      add: async function(daten){ var id = neueId(); var r = await sb.from("eintraege").insert({ sammlung: name, id: id, daten: daten }); if(r.error) throw fehler(r.error); return { id: id }; },
+      doc: function(id){ return { set: async function(daten){ var r = await sb.from("eintraege").upsert({ sammlung: name, id: id, daten: daten, geaendert_am: new Date().toISOString() }); if(r.error) throw fehler(r.error); } }; },
+      onSnapshot: function(cb, err){
+        var aus = false, t = null;
+        var laden = function(){ alleLaden(name).then(function(rows){ if(!aus) cb({ docs: rows.map(function(x){ return { id: x.id, data: function(){ return x.daten; } }; }) }); }).catch(function(e){ if(!aus && err) err(e); }); };
+        laden();
+        var ch = sb.channel("tb-" + name + "-" + neueId())
+          .on("postgres_changes", { event: "*", schema: "public", table: "eintraege", filter: "sammlung=eq." + name }, function(){ clearTimeout(t); t = setTimeout(laden, 300); })
+          .subscribe();
+        document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && !aus) laden(); });
+        return function(){ aus = true; sb.removeChannel(ch); };
+      }
+    };
+  }
+  var db = { collection: sammlung };
+  var assets = {
+    upload: async function(blob, opt){
+      var typ = (opt && opt.type) || blob.type || "";
+      if(blob.size > 20 * 1048576) throw { code: "too_large" };
+      var id = neueDateiId();
+      var r = await sb.storage.from(BUCKET).upload(id, blob, { contentType: typ, upsert: false });
+      if(r.error) throw fehler(r.error);
+      return { id: id, url: "_blob/" + id, contentType: typ, sizeBytes: blob.size };
+    },
+    delete: async function(id){ var r = await sb.storage.from(BUCKET).remove([id]); if(r.error) throw fehler(r.error); }
+  };
+  async function istChef(){ if(chef === null){ var r = await sb.rpc("ist_chef"); chef = !r.error && !!r.data; } return chef; }
+  var user = {
+    isOwner: istChef, canEdit: istChef,
+    id: async function(){ return sitzung.user.id; },
+    me: async function(){ return { id: sitzung.user.id, name: sitzung.user.email }; }
+  };
+  window.claude = { use: function(name){ return sessionP.then(function(){ return ({ db: db, assets: assets, user: user })[name] || null; }); } };
+
+  function kontoZeile(email){
+    var brand = document.querySelector("header.top .brand"); if(!brand || $("tb-konto")) return;
+    var d = document.createElement("div"); d.className = "tb-konto"; d.id = "tb-konto";
+    var s = document.createElement("span"); s.textContent = email;
+    var b = document.createElement("button"); b.type = "button"; b.textContent = "Abmelden";
+    b.addEventListener("click", function(){ tokenMerken(null); sb.auth.signOut().finally(function(){ location.reload(); }); });
+    d.append(s, b); brand.appendChild(d);
+  }
+  async function angemeldet(s){
+    var r = await sb.rpc("ist_freigegeben");
+    if(r.error || !r.data){
+      await sb.auth.signOut(); tokenMerken(null);
+      var m = $("tb-login-msg"); m.textContent = "Dieser Zugang ist noch nicht freigeschaltet. Bitte bei der Geschäftsführung melden."; m.className = "msg err";
+      return;
+    }
+    sitzung = s; tokenMerken(s);
+    $("tb-login").hidden = true;
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ kontoZeile(s.user.email); }); else kontoZeile(s.user.email);
+    bereit();
+  }
+  sb.auth.onAuthStateChange(function(ev, s){ if(s && (ev === "TOKEN_REFRESHED" || ev === "SIGNED_IN")) tokenMerken(s); });
+  sb.auth.getSession().then(function(r){ var s = r.data && r.data.session; if(s) angemeldet(s); });
+  $("tb-login-form").addEventListener("submit", async function(ev){
+    ev.preventDefault();
+    var m = $("tb-login-msg"), btn = $("tb-login-btn");
+    var email = $("tb-email").value.trim(), pw = $("tb-pw").value;
+    if(!email || !pw){ m.textContent = "Bitte E-Mail und Passwort eingeben."; m.className = "msg err"; return; }
+    btn.disabled = true; m.textContent = "Meldet an …"; m.className = "msg";
+    var r = await sb.auth.signInWithPassword({ email: email, password: pw });
+    btn.disabled = false;
+    if(r.error){ m.textContent = /invalid/i.test(r.error.message) ? "E-Mail oder Passwort stimmt nicht." : "Anmelden nicht möglich. Bitte Verbindung prüfen."; m.className = "msg err"; return; }
+    m.textContent = "";
+    angemeldet(r.data.session);
+  });
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(function(){}); }
+})();
+</script>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1><span>In Terra</span>Tagesbericht</h1>
+      <div class="mode" id="mode">Lädt …</div>
+    </div>
+    <div class="tabs vier" role="tablist">
+      <button id="tab-form" role="tab" aria-selected="true">Erfassen</button>
+      <button id="tab-list" role="tab" aria-selected="false">Berichte <span class="count" id="count"></span></button>
+      <button id="tab-plan" role="tab" aria-selected="false">Pläne</button>
+      <button id="tab-urlaub" role="tab" aria-selected="false">Urlaub</button>
+    </div>
+  </header>
+
+  <!-- Formular für Bauleiter -->
+  <section class="view" id="view-form">
+    <form id="f" novalidate>
+      <div style="display:grid;gap:14px">
+        <div class="group">
+          <h2>Tag und Baustelle</h2>
+          <div class="row">
+            <label for="datum"><span class="req">Datum</span><input type="date" id="datum" required></label>
+            <label>Kalenderwoche<div class="kw" id="kw">–</div></label>
+          </div>
+          <label for="bauleiter"><span class="req">Verantwortlicher Bauleiter</span>
+            <input id="bauleiter" list="bauleiter-liste" autocomplete="off" placeholder="Name" required>
+            <datalist id="bauleiter-liste"></datalist>
+          </label>
+          <label for="adresse"><span class="req">Projektadresse</span>
+            <input id="adresse" autocomplete="off" placeholder="Straße, Hausnummer, Ort" required></label>
+          <label for="nvt">NVT-Nummer(n) <span class="hint">Mehrere mit Komma trennen</span>
+            <input id="nvt" autocomplete="off" placeholder="z. B. NVT 1080-03"></label>
+        </div>
+
+        <div class="group">
+          <h2>Arbeitszeit</h2>
+          <div class="row3">
+            <label for="beginn"><span class="req">Beginn</span><input type="time" id="beginn" required></label>
+            <label for="ende"><span class="req">Ende</span><input type="time" id="ende" required></label>
+            <label for="pause" class="pause">Pause Min.<input type="number" id="pause" inputmode="numeric" min="0" step="5" value="30"></label>
+          </div>
+          <div class="calc" id="dauer">Reine Arbeitszeit: <b>–</b></div>
+        </div>
+
+        <div class="group">
+          <h2>Mitarbeiter auf der Baustelle</h2>
+          <label for="ma-name">Name hinzufügen
+            <div class="addname">
+              <input id="ma-name" list="ma-liste" autocomplete="off" placeholder="Vor- und Nachname">
+              <button type="button" class="btn" id="ma-add">Hinzufügen</button>
+            </div>
+            <datalist id="ma-liste"></datalist>
+          </label>
+          <div class="chips" id="chips"></div>
+          <div class="calc">Anzahl eingesetzte Mitarbeiter: <b id="ma-count">0</b></div>
+        </div>
+
+        <div class="group">
+          <h2>Leistung</h2>
+          <p class="voice"><span aria-hidden="true" class="mic"></span>Lieber sprechen statt tippen? Ins Textfeld tippen und auf der Handy-Tastatur das Mikrofon drücken.</p>
+          <label for="leistungen">Leistungsergebnisse und Änderungen
+            <textarea id="leistungen" placeholder="Was wurde heute geschafft? Was hat sich geändert?"></textarea></label>
+          <label for="ha">Hergestellte Hausanschlüsse
+            <div class="stepper">
+              <button type="button" id="ha-minus" aria-label="Einen weniger">−</button>
+              <input type="number" id="ha" inputmode="numeric" min="0" value="0">
+              <button type="button" id="ha-plus" aria-label="Einen mehr">+</button>
+            </div>
+          </label>
+          <label for="bemerkungen">Bemerkungen und Sonstiges
+            <textarea id="bemerkungen" placeholder="Störungen, Material, Wetter, Absprachen …"></textarea></label>
+        </div>
+
+        <div class="group">
+          <h2>Plan und Strecke</h2>
+          <p class="calc" id="plan-off">Pläne und Strecken gehen nur in der Online-Version.</p>
+          <div class="sub" id="plan-on" hidden>
+            <label for="plan-sel">Plan auswählen
+              <select id="plan-sel"><option value="">– kein Plan –</option></select></label>
+            <details class="plan-neu" id="plan-neu">
+              <summary>+ Neuen Plan hochladen</summary>
+              <div class="inner">
+                <label for="plan-art">Art des Plans
+                  <select id="plan-art"><option value="Lageplan">Lageplan</option><option value="Fremdleitungsplan">Fremdleitungsplan</option></select></label>
+                <label for="plan-firma" id="plan-firma-l" hidden>Firma, der die Leitungen gehören
+                  <input id="plan-firma" autocomplete="off" placeholder="Name der Firma"></label>
+                <label class="upload" id="plan-up-label" for="plan-file">Plan als Foto oder PDF wählen
+                  <input type="file" id="plan-file" accept="image/*,application/pdf"></label>
+                <div class="calc" id="plan-status">Bei PDF-Plänen wird jede Seite (höchstens 10) als eigener Plan gespeichert. Die Projektadresse oben wird beim Plan vermerkt.</div>
+              </div>
+            </details>
+            <div class="sub" id="plan-box" hidden>
+              <div id="form-viewer"></div>
+              <div class="draw-tools">
+                <button type="button" class="btn primary" id="draw-start">Strecke einzeichnen</button>
+                <button type="button" class="btn" id="draw-undo" hidden>Letzten Punkt löschen</button>
+                <button type="button" class="btn primary" id="draw-done" hidden>Strecke fertig</button>
+                <button type="button" class="btn" id="draw-cancel" hidden>Abbrechen</button>
+              </div>
+              <div class="calc" id="draw-hint">Graue Linien sind Strecken aus früheren Berichten.</div>
+              <div class="sub" id="strecken-form"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Dokumente und Fotos</h2>
+          <label class="upload" id="up-label" for="up-input">+ Datei oder Foto anhängen
+            <input type="file" id="up-input" multiple accept="image/*,application/pdf"></label>
+          <div class="calc" id="up-hint">Fotos und PDF-Dateien, je Datei höchstens 20 MB.</div>
+          <div class="files" id="up-list"></div>
+        </div>
+
+        <div class="group">
+          <h2>Kabelschaden</h2>
+          <div class="question">Wurde heute ein Kabel beschädigt?</div>
+          <div class="seg" role="radiogroup" aria-label="Kabelschaden">
+            <label><input type="radio" name="ks" id="ks-nein" value="nein" checked><span>nein</span></label>
+            <label><input type="radio" name="ks" id="ks-ja" value="ja"><span>ja</span></label>
+          </div>
+          <div class="sub" id="ks-box" hidden>
+            <div class="sub" id="ks-list"></div>
+            <button type="button" class="btn" id="ks-add">+ Weiteren Kabelschaden</button>
+          </div>
+          <datalist id="heute-liste"></datalist>
+          <datalist id="firma-liste"></datalist>
+        </div>
+
+        <div class="group">
+          <h2>Samstag</h2>
+          <div class="seg" role="radiogroup" aria-label="Samstag">
+            <label><input type="radio" name="samstag" id="sa-frei" value="frei" checked><span>frei</span></label>
+            <label><input type="radio" name="samstag" id="sa-gearbeitet" value="gearbeitet"><span>gearbeitet</span></label>
+          </div>
+          <div class="sub" id="sa-box" hidden>
+            <label for="sa-name"><span class="req">Wer hat am Samstag gearbeitet?</span>
+              <div class="addname">
+                <input id="sa-name" list="ma-liste" autocomplete="off" placeholder="Vor- und Nachname">
+                <button type="button" class="btn" id="sa-add">Hinzufügen</button>
+              </div>
+            </label>
+            <div class="chips" id="sa-chips"></div>
+            <div class="calc">Anzahl am Samstag: <b id="sa-count">0</b></div>
+          </div>
+        </div>
+        <p class="note">Nur Testbetrieb: bitte keine echten Namen oder Adressen eintragen.</p>
+      </div>
+    </form>
+  </section>
+
+  <!-- Übersicht für die Geschäftsführung -->
+  <section class="view" id="view-list" hidden>
+    <div class="filters">
+      <label for="flt-bl">Bauleiter<select id="flt-bl"><option value="">Alle</option></select></label>
+      <label for="flt-kw">Kalenderwoche<select id="flt-kw"><option value="">Alle</option></select></label>
+    </div>
+    <div id="list" style="display:grid;gap:10px"></div>
+  </section>
+
+  <!-- Pläne mit allen Strecken -->
+  <section class="view" id="view-plan" hidden>
+    <label for="pl-sel">Plan<select id="pl-sel"></select></label>
+    <div id="pl-empty" class="emptystate" hidden>Noch kein Plan hochgeladen. Pläne werden im Bericht unter „Plan und Strecke“ hochgeladen.</div>
+    <div id="pl-main" class="sub">
+      <div class="pmeta" id="pl-meta"></div>
+      <div class="sums">
+        <div class="sum"><span>Offen</span><b id="pl-offen">–</b></div>
+        <div class="sum"><span>Abgerechnet</span><b id="pl-ab">–</b></div>
+      </div>
+      <div class="legend"><span><i style="background:var(--ln-offen)"></i>gearbeitet, nicht abgerechnet</span><span><i style="background:var(--ln-ab)"></i>abgerechnet</span></div>
+      <div id="pl-viewer"></div>
+      <div class="sub" id="pl-list"></div>
+      <p class="note" id="pl-chef-hint"></p>
+    </div>
+  </section>
+
+  <!-- Ergänzung Version 6: Mitarbeiter Urlaub -->
+  <section class="view" id="view-urlaub" hidden>
+    <div class="group">
+      <h2>Mitarbeiter Urlaub eintragen</h2>
+      <label for="u-name"><span class="req">Mitarbeiter</span>
+        <input id="u-name" list="ma-liste" autocomplete="off" placeholder="Vor- und Nachname"></label>
+      <div class="row">
+        <label for="u-von"><span class="req">Erster Urlaubstag</span><input type="date" id="u-von"></label>
+        <label for="u-bis"><span class="req">Letzter Urlaubstag</span><input type="date" id="u-bis"></label>
+      </div>
+      <div class="calc" id="u-tage">Arbeitstage (Mo–Fr): <b>–</b></div>
+      <label for="u-wer"><span class="req">Eingetragen von</span>
+        <input id="u-wer" list="bauleiter-liste" autocomplete="off" placeholder="Name des Bauleiters"></label>
+      <div class="msg" id="u-msg" role="status"></div>
+      <button class="save" id="u-save" type="button">Urlaub speichern</button>
+    </div>
+    <div class="sums">
+      <div class="sum"><span>Heute im Urlaub</span><b id="u-heute">0</b></div>
+      <div class="sum"><span>Geplant</span><b id="u-geplant">0</b></div>
+    </div>
+    <div class="filters">
+      <label for="u-flt">Mitarbeiter<select id="u-flt"><option value="">Alle</option></select></label>
+      <label for="u-zeit">Zeitraum<select id="u-zeit"><option value="kommend">Aktuell und geplant</option><option value="alle">Alle, auch vergangene</option></select></label>
+    </div>
+    <div id="u-list" style="display:grid;gap:10px"></div>
+    <p class="note">Hier nur Urlaub eintragen, keine Krankheit und keine Gründe. Feiertage sind bei den Arbeitstagen nicht abgezogen. Nur Testbetrieb: bitte keine echten Namen.</p>
+  </section>
+</div>
+
+<div class="savebar" id="savebar">
+  <div class="in">
+    <div class="msg" id="msg" role="status"></div>
+    <button class="save" id="save" type="button">Bericht speichern</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const LS_KEY = "intera-tagesberichte-v1";
+
+  // Erfundene Beispieldaten, nur wenn der Bericht ohne gemeinsamen Speicher geöffnet wird
+  const BEISPIELE = [
+    {datum:"2026-10-14",bauleiter:"Tom Beispiel",adresse:"Musterweg 12, 30453 Hannover",nvt:"NVT 0001-01",beginn:"07:00",ende:"16:00",pause:30,mitarbeiter:["Max Muster","Erika Probe","Paul Test"],leistungen:"45 m Graben geöffnet und verfüllt.\nGehweg provisorisch hergestellt.",hausanschluesse:3,bemerkungen:"Beispieldaten",samstag:"frei"},
+    {datum:"2026-10-13",bauleiter:"Lena Testfeld",adresse:"Probestraße 5, 30455 Hannover",nvt:"NVT 0002-04",beginn:"06:30",ende:"15:30",pause:45,mitarbeiter:["Jan Probe","Ali Muster"],leistungen:"Kopfloch am NVT gesetzt.",hausanschluesse:1,bemerkungen:"Beispieldaten",samstag:"gearbeitet"}
+  ];
+
+  // ---------- Hilfen ----------
+  function isoWeek(dateStr){
+    if(!dateStr) return null;
+    const d = new Date(dateStr + "T12:00:00Z");
+    if(isNaN(d)) return null;
+    const day = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - day + 3);
+    const firstThu = new Date(Date.UTC(d.getUTCFullYear(),0,4));
+    const fday = (firstThu.getUTCDay() + 6) % 7;
+    firstThu.setUTCDate(firstThu.getUTCDate() - fday + 3);
+    return {kw: 1 + Math.round((d - firstThu) / 604800000), jahr: d.getUTCFullYear()};
+  }
+  function minutes(t){ if(!t) return null; const [h,m] = t.split(":").map(Number); return h*60+m; }
+  function netto(b,e,p){
+    const a = minutes(b), z = minutes(e);
+    if(a==null || z==null) return null;
+    let diff = z - a; if(diff <= 0) return null;
+    diff -= Math.max(0, Number(p)||0);
+    return diff > 0 ? diff : null;
+  }
+  const fmtDauer = m => m==null ? "–" : `${Math.floor(m/60)}:${String(m%60).padStart(2,"0")} Std.`;
+  function fmtDatum(s){
+    const d = new Date(s + "T12:00:00");
+    if(isNaN(d)) return s;
+    return d.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"});
+  }
+  function heute(){ const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+
+  // ---------- Speicher ----------
+  let db = null, berichte = [], modus = "lokal";
+  function lsRead(){ try{ const v = JSON.parse(localStorage.getItem(LS_KEY)); return Array.isArray(v) ? v : null; }catch(e){ return null; } }
+  function lsWrite(list){ try{ localStorage.setItem(LS_KEY, JSON.stringify(list)); return true; }catch(e){ return false; } }
+
+  function startLokal(){
+    modus = "lokal";
+    let list = lsRead();
+    if(!list){ list = BEISPIELE.map((b,i)=>({...b,id:"beispiel-"+i,kw:isoWeek(b.datum).kw,anzahlMitarbeiter:b.mitarbeiter.length,test:true})); lsWrite(list); }
+    berichte = list;
+    $("mode").textContent = "Nur auf diesem Gerät gespeichert";
+    render();
+  }
+
+  function startGemeinsam(){
+    modus = "gemeinsam";
+    $("mode").textContent = "Gemeinsamer Speicher · Testdaten";
+    const fehler = () => { $("mode").textContent = "Verbindung unterbrochen. Seite neu laden."; };
+    db.collection("berichte").onSnapshot(snap => {
+      berichte = snap.docs.map(d => ({...d.data(), id:d.id}));
+      render();
+    }, fehler);
+    db.collection("plaene").onSnapshot(snap => { plaene = snap.docs.map(d => ({...d.data(), id:d.id})); planDatenNeu(); }, fehler);
+    db.collection("strecken").onSnapshot(snap => { strecken = snap.docs.map(d => ({...d.data(), id:d.id})); planDatenNeu(); }, fehler);
+    db.collection("abrechnung").onSnapshot(snap => { abrechnung = {}; snap.docs.forEach(d => { abrechnung[d.id] = d.data(); }); planDatenNeu(); }, fehler);
+    planAn(true);
+  }
+
+  async function speichern(rec){
+    if(modus === "gemeinsam"){
+      const ref = await db.collection("berichte").add(rec);
+      return ref.id;
+    } else {
+      const list = lsRead() || [];
+      list.push({...rec, id:"lokal-"+Date.now()});
+      if(!lsWrite(list)) throw new Error("Speichern auf diesem Gerät nicht möglich.");
+      berichte = list; render();
+    }
+  }
+
+  // ---------- Formular ----------
+  let mitarbeiter = [];
+  function updKW(){ const w = isoWeek($("datum").value); $("kw").textContent = w ? `KW ${w.kw} / ${w.jahr}` : "–"; }
+  function updDauer(){ $("dauer").innerHTML = "Reine Arbeitszeit: <b>" + esc(fmtDauer(netto($("beginn").value,$("ende").value,$("pause").value))) + "</b>"; }
+  function renderChips(){
+    const c = $("chips");
+    if(!mitarbeiter.length){ c.innerHTML = '<span class="empty-chips">Noch niemand eingetragen.</span>'; }
+    else c.innerHTML = mitarbeiter.map((n,i)=>`<span class="chip">${esc(n)}<button type="button" data-i="${i}" aria-label="${esc(n)} entfernen">×</button></span>`).join("");
+    $("ma-count").textContent = mitarbeiter.length;
+    $("heute-liste").innerHTML = mitarbeiter.map(n => `<option value="${esc(n)}">`).join("");
+  }
+
+  // Namensliste mit "Hinzufügen" und Entfernen-Kreuz (für Samstag und Kabelschaden)
+  function chipList(input, btn, chipsEl, countEl){
+    let items = [];
+    const draw = () => {
+      chipsEl.innerHTML = items.length
+        ? items.map((n,i)=>`<span class="chip">${esc(n)}<button type="button" data-i="${i}" aria-label="${esc(n)} entfernen">×</button></span>`).join("")
+        : '<span class="empty-chips">Noch niemand eingetragen.</span>';
+      if(countEl) countEl.textContent = items.length;
+    };
+    const add = () => {
+      const v = input.value.trim(); if(!v) return;
+      if(!items.some(n => n.toLowerCase() === v.toLowerCase())) items.push(v);
+      input.value = ""; input.focus(); draw();
+    };
+    btn.addEventListener("click", add);
+    input.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); add(); } });
+    chipsEl.addEventListener("click", e => { const b = e.target.closest("button[data-i]"); if(b){ items.splice(+b.dataset.i,1); draw(); } });
+    draw();
+    return { get: () => items.slice(), pending: () => input.value.trim() !== "", clear(){ items = []; input.value = ""; draw(); } };
+  }
+
+  // Samstag
+  const saList = chipList($("sa-name"), $("sa-add"), $("sa-chips"), $("sa-count"));
+  const samstagWert = () => document.querySelector('input[name="samstag"]:checked').value;
+  document.querySelectorAll('input[name="samstag"]').forEach(r => r.addEventListener("change", () => {
+    $("sa-box").hidden = samstagWert() !== "gearbeitet";
+  }));
+
+  // Dokumente und Fotos
+  let assets = null, dokumente = [], laufendeUploads = 0;
+  const ERLAUBT = ["image/jpeg","image/png","image/webp","image/gif","application/pdf"];
+  const fmtGroesse = b => b >= 1048576 ? (b/1048576).toFixed(1).replace(".",",") + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
+  function uploadAn(an){
+    assets = an;
+    $("up-label").setAttribute("aria-disabled", an ? "false" : "true");
+    $("up-input").disabled = !an;
+    $("up-hint").textContent = an ? "Fotos und PDF-Dateien, je Datei höchstens 20 MB. Große Fotos werden automatisch verkleinert." : "Hochladen ist in dieser Ansicht nicht möglich (nur online mit Freigabe als Mitwirkender).";
+  }
+  // Große Handyfotos verkleinern: spart mobile Daten und Speicherplatz
+  function verkleinern(file){
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 2000, f = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.naturalWidth * f); c.height = Math.round(img.naturalHeight * f);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(b => resolve(b || null), "image/jpeg", 0.85);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  }
+  function renderDateien(){
+    $("up-list").innerHTML = dokumente.map((d,i) => `<div class="file">
+      ${d.status === "fertig" && d.typ.startsWith("image/") ? `<img class="thumb" src="_blob/${esc(d.id)}" alt="">` : `<span class="thumb">${d.typ === "application/pdf" ? "PDF" : "…"}</span>`}
+      <span class="fname">${esc(d.name)}<small>${d.status === "laedt" ? "Wird hochgeladen …" : d.status === "fehler" ? esc(d.fehler) : esc(fmtGroesse(d.groesse))}</small></span>
+      ${d.status === "laedt" ? "<span></span>" : `<button type="button" class="linkbtn" data-del="${i}">Entfernen</button>`}
+    </div>`).join("");
+  }
+  async function hochladen(file){
+    const d = { name: file.name || "Foto", typ: file.type || "", groesse: file.size, status: "laedt" };
+    dokumente.push(d); renderDateien(); laufendeUploads++;
+    try{
+      let blob = file;
+      if(file.type.startsWith("image/") && (!ERLAUBT.includes(file.type) || file.size > 1.5 * 1048576) && file.type !== "image/gif"){
+        const klein = await verkleinern(file);
+        if(klein){ blob = klein; d.name = d.name.replace(/\.[^.]+$/, "") + ".jpg"; }
+      }
+      if(!ERLAUBT.includes(blob.type)) throw { code: "unsupported_type" };
+      const r = await assets.upload(blob);
+      Object.assign(d, { id: r.id, typ: r.contentType, groesse: r.sizeBytes, status: "fertig" });
+    }catch(e){
+      const c = e && e.code;
+      d.status = "fehler";
+      d.fehler = c === "too_large" ? "Zu groß (höchstens 20 MB)." :
+                 c === "unsupported_type" ? "Dateiart nicht möglich. Bitte als PDF oder Foto anhängen." :
+                 c === "quota_or_state" ? "Speicher voll. Bitte Geschäftsführung informieren." :
+                 c === "rate_limited" ? "Zu viele Dateien auf einmal. Bitte kurz warten." :
+                 "Hochladen fehlgeschlagen. Bitte erneut versuchen.";
+    }finally{ laufendeUploads--; renderDateien(); }
+  }
+  $("up-input").addEventListener("change", e => {
+    const files = [...e.target.files]; e.target.value = "";
+    if(!assets) return;
+    files.forEach(hochladen);
+  });
+  $("up-list").addEventListener("click", e => {
+    const b = e.target.closest("button[data-del]"); if(!b) return;
+    const d = dokumente[+b.dataset.del];
+    dokumente.splice(+b.dataset.del, 1); renderDateien();
+    if(d && d.id && assets) assets.delete(d.id).catch(() => {});
+  });
+  uploadAn(null);
+
+  // Kabelschaden
+  const schaeden = []; let schadenNr = 0;
+  function addSchaden(){
+    const n = ++schadenNr;
+    const el = document.createElement("div");
+    el.className = "schaden";
+    el.innerHTML = `<div class="schaden-head"><strong>Kabelschaden</strong><button type="button" class="linkbtn" data-rm>Entfernen</button></div>
+      <label for="ks-v-${n}"><span class="req">Wer hat das Kabel beschädigt?</span>
+        <div class="addname"><input id="ks-v-${n}" list="heute-liste" autocomplete="off" placeholder="Name des Mitarbeiters"><button type="button" class="btn" data-add>Hinzufügen</button></div></label>
+      <div class="chips" data-chips></div>
+      <div class="row-sh">
+        <label for="ks-s-${n}"><span class="req">Straße</span><input id="ks-s-${n}" autocomplete="off"></label>
+        <label for="ks-h-${n}"><span class="req">Hausnr.</span><input id="ks-h-${n}" autocomplete="off"></label>
+      </div>
+      <label for="ks-f-${n}"><span class="req">Firma, der das Kabel gehört</span><input id="ks-f-${n}" list="firma-liste" autocomplete="off" placeholder="Name der Firma"></label>`;
+    const entry = { el, n, list: chipList(el.querySelector(`#ks-v-${n}`), el.querySelector("[data-add]"), el.querySelector("[data-chips]"), null) };
+    el.querySelector("[data-rm]").addEventListener("click", () => {
+      el.remove(); schaeden.splice(schaeden.indexOf(entry), 1);
+      if(!schaeden.length){ $("ks-nein").checked = true; $("ks-box").hidden = true; }
+    });
+    schaeden.push(entry); $("ks-list").appendChild(el);
+  }
+  function schaedenLeeren(){ schaeden.forEach(s => s.el.remove()); schaeden.length = 0; $("ks-box").hidden = true; }
+  const ksJa = () => $("ks-ja").checked;
+  document.querySelectorAll('input[name="ks"]').forEach(r => r.addEventListener("change", () => {
+    if(ksJa()){ $("ks-box").hidden = false; if(!schaeden.length) addSchaden(); }
+    else schaedenLeeren();
+  }));
+  $("ks-add").addEventListener("click", addSchaden);
+  function addName(){
+    const v = $("ma-name").value.trim();
+    if(!v) return;
+    if(!mitarbeiter.some(n => n.toLowerCase() === v.toLowerCase())) mitarbeiter.push(v);
+    $("ma-name").value = ""; $("ma-name").focus(); renderChips();
+  }
+  $("ma-add").addEventListener("click", addName);
+  $("ma-name").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); addName(); } });
+  $("chips").addEventListener("click", e => { const b = e.target.closest("button[data-i]"); if(b){ mitarbeiter.splice(+b.dataset.i,1); renderChips(); } });
+  $("ha-minus").addEventListener("click", () => { $("ha").value = Math.max(0,(+$("ha").value||0)-1); });
+  $("ha-plus").addEventListener("click", () => { $("ha").value = (+$("ha").value||0)+1; });
+  $("datum").addEventListener("input", updKW);
+  ["beginn","ende","pause"].forEach(id => $(id).addEventListener("input", updDauer));
+  $("f").addEventListener("submit", e => e.preventDefault());
+
+  function setMsg(t, cls){ const m = $("msg"); m.textContent = t; m.className = "msg " + (cls||""); }
+
+  function pruefen(){
+    document.querySelectorAll(".field-err").forEach(el => el.classList.remove("field-err"));
+    const fehlt = [];
+    [["datum","Datum"],["bauleiter","Bauleiter"],["adresse","Projektadresse"],["beginn","Beginn"],["ende","Ende"]].forEach(([id,name]) => {
+      if(!$(id).value.trim()){ fehlt.push(name); $(id).closest("label").classList.add("field-err"); }
+    });
+    if(fehlt.length) return "Bitte ausfüllen: " + fehlt.join(", ") + ".";
+    if(laufendeUploads > 0) return "Bitte warten, bis alle Dateien hochgeladen sind.";
+    if(planLaedt) return "Bitte warten, bis der Plan hochgeladen ist.";
+    if(zeichnet) return "Die Strecke ist noch nicht fertig. Bitte auf „Strecke fertig“ oder „Abbrechen“ tippen.";
+    if(netto($("beginn").value,$("ende").value,$("pause").value) == null) return "Ende muss nach Beginn liegen (abzüglich Pause).";
+    const offen = "Ein Name im Feld ist noch nicht hinzugefügt. Bitte auf „Hinzufügen“ tippen.";
+    if($("ma-name").value.trim()){ $("ma-name").closest("label").classList.add("field-err"); return offen; }
+    if(ksJa()){
+      for(const s of schaeden){
+        const el = s.el;
+        if(s.list.pending()){ el.querySelector(`#ks-v-${s.n}`).closest("label").classList.add("field-err"); return offen; }
+        const leer = [];
+        if(!s.list.get().length){ leer.push("wer das Kabel beschädigt hat"); el.querySelector(`#ks-v-${s.n}`).closest("label").classList.add("field-err"); }
+        [["s","Straße"],["h","Hausnummer"],["f","Firma"]].forEach(([k,name]) => {
+          const inp = el.querySelector(`#ks-${k}-${s.n}`);
+          if(!inp.value.trim()){ leer.push(name); inp.closest("label").classList.add("field-err"); }
+        });
+        if(leer.length) return "Kabelschaden: bitte ausfüllen: " + leer.join(", ") + ".";
+      }
+    }
+    if(samstagWert() === "gearbeitet"){
+      if(saList.pending()){ $("sa-name").closest("label").classList.add("field-err"); return offen; }
+      if(!saList.get().length){ $("sa-name").closest("label").classList.add("field-err"); return "Bitte eintragen, wer am Samstag gearbeitet hat."; }
+    }
+    return null;
+  }
+
+  let speichertGerade = false;
+  $("save").addEventListener("click", async () => {
+    if(speichertGerade) return;
+    const fehler = pruefen();
+    if(fehler){ setMsg(fehler, "err"); return; }
+    const rec = {
+      datum: $("datum").value,
+      kw: isoWeek($("datum").value).kw,
+      bauleiter: $("bauleiter").value.trim(),
+      adresse: $("adresse").value.trim(),
+      nvt: $("nvt").value.trim(),
+      beginn: $("beginn").value,
+      ende: $("ende").value,
+      pause: Math.max(0, +$("pause").value || 0),
+      mitarbeiter: mitarbeiter.slice(),
+      anzahlMitarbeiter: mitarbeiter.length,
+      leistungen: $("leistungen").value.trim(),
+      hausanschluesse: Math.max(0, +$("ha").value || 0),
+      bemerkungen: $("bemerkungen").value.trim(),
+      samstag: samstagWert(),
+      samstagMitarbeiter: samstagWert() === "gearbeitet" ? saList.get() : [],
+      kabelschaden: ksJa(),
+      kabelschaeden: ksJa() ? schaeden.map(s => ({
+        verursacher: s.list.get(),
+        strasse: s.el.querySelector(`#ks-s-${s.n}`).value.trim(),
+        hausnummer: s.el.querySelector(`#ks-h-${s.n}`).value.trim(),
+        firma: s.el.querySelector(`#ks-f-${s.n}`).value.trim()
+      })) : [],
+      dokumente: dokumente.filter(d => d.status === "fertig").map(d => ({ id: d.id, name: d.name, typ: d.typ, groesse: d.groesse })),
+      erstelltAm: new Date().toISOString(),
+      test: true
+    };
+    speichertGerade = true; $("save").disabled = true; setMsg("Speichert …");
+    try{
+      const berichtId = await speichern(rec);
+      if(berichtId && neueStrecken.length){
+        for(const st of neueStrecken){
+          await db.collection("strecken").add({ berichtId, planId: st.planId, punkte: st.punkte.map(([x,y]) => ({x:+x.toFixed(4), y:+y.toFixed(4)})),
+            laenge: st.laenge, notiz: st.notiz, datum: rec.datum, bauleiter: rec.bauleiter, erstelltAm: rec.erstelltAm, test: true });
+        }
+      }
+      setMsg(`Gespeichert: ${fmtDatum(rec.datum)}, ${rec.adresse}`, "ok");
+      formLeeren(rec.bauleiter);
+    }catch(e){
+      const code = e && e.code;
+      setMsg(code === "invalid_argument" ? "Sie haben keine Berechtigung zum Speichern. Bitte Freigabe prüfen." :
+             code === "quota_exceeded" ? "Der Speicher ist voll. Bitte alte Testberichte löschen lassen." :
+             "Nicht gespeichert. Bitte Verbindung prüfen und erneut tippen.", "err");
+    }finally{ speichertGerade = false; $("save").disabled = false; }
+  });
+
+  function formLeeren(bauleiter){
+    $("f").reset();
+    $("datum").value = heute(); $("bauleiter").value = bauleiter || ""; $("pause").value = 30; $("ha").value = 0;
+    mitarbeiter = []; renderChips(); saList.clear(); $("sa-box").hidden = true; schaedenLeeren(); dokumente = []; renderDateien(); neueStrecken = []; zeichnenAbbrechen(); renderStreckenForm(); updKW(); updDauer();
+    window.scrollTo({top:0});
+  }
+
+  // ---------- Pläne und Strecken ----------
+  let plaene = [], strecken = [], abrechnung = {}, istChef = false, planLaedt = false, planUpload = false;
+  let neueStrecken = [], zeichnet = false, aktuelle = [];
+  const planById = id => plaene.find(p => p.id === id);
+  const fmtM = m => (Math.round(m * 10) / 10).toLocaleString("de-DE") + " m";
+  const istAb = st => !!(abrechnung[st.id] && abrechnung[st.id].abgerechnet);
+  const pts = st => (Array.isArray(st.punkte) ? st.punkte : []).map(p => Array.isArray(p) ? p : [p.x, p.y]).filter(p => isFinite(p[0]) && isFinite(p[1]));
+
+  // Planansicht: Bild + Linien darüber, mit Zoom-Tasten
+  function planViewer(host, onTap){
+    host.className = "pv";
+    host.innerHTML = `<div class="pv-tools"><button type="button" data-z="-1" aria-label="Verkleinern">−</button><span>100 %</span><button type="button" data-z="1" aria-label="Vergrößern">+</button></div>
+      <div class="pv-scroll"><div class="pv-inner"><img alt="Plan"><svg xmlns="http://www.w3.org/2000/svg"></svg></div></div>`;
+    const inner = host.querySelector(".pv-inner"), img = host.querySelector("img"), svg = host.querySelector("svg"), lab = host.querySelector(".pv-tools span");
+    const STUFEN = [1, 1.5, 2, 3, 4, 6]; let z = 0, plan = null, linien = [];
+    host.querySelector(".pv-tools").addEventListener("click", e => {
+      const b = e.target.closest("button[data-z]"); if(!b) return;
+      const sc = host.querySelector(".pv-scroll"), alt = STUFEN[z];
+      const cx = (sc.scrollLeft + sc.clientWidth / 2) / inner.clientWidth, cy = (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, inner.clientHeight);
+      z = Math.max(0, Math.min(STUFEN.length - 1, z + +b.dataset.z)); if(STUFEN[z] === alt) return;
+      inner.style.width = (STUFEN[z] * 100) + "%"; lab.textContent = Math.round(STUFEN[z] * 100) + " %";
+      requestAnimationFrame(() => { sc.scrollLeft = cx * inner.clientWidth - sc.clientWidth / 2; sc.scrollTop = cy * inner.clientHeight - sc.clientHeight / 2; redraw(); });
+    });
+    img.addEventListener("load", redraw);
+    img.addEventListener("error", () => { svg.innerHTML = ""; });
+    inner.addEventListener("click", e => {
+      if(!onTap || !plan) return;
+      const r = inner.getBoundingClientRect();
+      onTap((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+    });
+    function redraw(){
+      if(!plan) return;
+      const w = plan.w || img.naturalWidth || 1000, h = plan.h || img.naturalHeight || 700;
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      const k = w / (inner.clientWidth || 340);
+      let out = "";
+      linien.forEach(l => {
+        const p = l.punkte.map(([x,y]) => `${(x*w).toFixed(1)},${(y*h).toFixed(1)}`).join(" ");
+        const sw = (l.dick ? 7 : 5) * k;
+        if(l.punkte.length > 1){
+          out += `<polyline points="${p}" fill="none" stroke="var(--halo)" stroke-width="${sw + 3*k}" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`;
+          out += `<polyline points="${p}" fill="none" stroke="${l.farbe}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"${l.strich ? ` stroke-dasharray="${8*k} ${6*k}"` : ""}/>`;
+        }
+        if(l.punkte_zeigen) l.punkte.forEach(([x,y]) => { out += `<circle cx="${x*w}" cy="${y*h}" r="${6*k}" fill="${l.farbe}" stroke="var(--halo)" stroke-width="${2*k}"/>`; });
+        if(l.nr != null && l.punkte.length){
+          const [x,y] = l.punkte[0];
+          out += `<circle cx="${x*w}" cy="${y*h}" r="${12*k}" fill="${l.farbe}" stroke="var(--halo)" stroke-width="${2*k}"/><text x="${x*w}" y="${y*h}" dy="${4.5*k}" text-anchor="middle" font-size="${13*k}" font-weight="700" font-family="monospace" fill="#fff">${l.nr}</text>`;
+        }
+      });
+      svg.innerHTML = out;
+    }
+    return {
+      setPlan(p){ if(plan && p && plan.id === p.id) return; plan = p; if(p){ img.src = "_blob/" + p.assetId; } else { img.removeAttribute("src"); svg.innerHTML = ""; } },
+      setLinien(l){ linien = l; redraw(); },
+      drawing(on){ inner.classList.toggle("drawing", on); },
+      redraw
+    };
+  }
+
+  const formViewer = planViewer($("form-viewer"), (x, y) => {
+    if(!zeichnet) return;
+    aktuelle.push([Math.min(1, Math.max(0, x)), Math.min(1, Math.max(0, y))]);
+    zeichnenUI(); formLinien();
+  });
+  const plViewer = planViewer($("pl-viewer"), null);
+
+  function planAn(on){ $("plan-off").hidden = on; $("plan-on").hidden = !on; }
+  function planUploadAn(on){ planUpload = on; $("plan-neu").hidden = !on; }
+  planAn(false);
+
+  function formLinien(){
+    const pid = $("plan-sel").value; const l = [];
+    strecken.filter(st => st.planId === pid).forEach(st => l.push({ punkte: pts(st), farbe: "var(--ln-alt)" }));
+    neueStrecken.forEach((st, i) => { if(st.planId === pid) l.push({ punkte: st.punkte, farbe: "var(--ln-draw)", dick: true, nr: i + 1 }); });
+    if(zeichnet) l.push({ punkte: aktuelle, farbe: "var(--ln-draw)", strich: true, punkte_zeigen: true });
+    formViewer.setLinien(l);
+  }
+  function zeichnenUI(){
+    $("draw-start").hidden = zeichnet; $("draw-undo").hidden = !zeichnet || !aktuelle.length;
+    $("draw-done").hidden = !zeichnet; $("draw-cancel").hidden = !zeichnet;
+    $("plan-sel").disabled = zeichnet;
+    $("draw-hint").textContent = zeichnet
+      ? (aktuelle.length < 2 ? "Tippen Sie auf dem Plan Punkt für Punkt entlang der Strecke (mindestens 2 Punkte). Mit + vergrößern." : `${aktuelle.length} Punkte gesetzt. Weiter tippen oder „Strecke fertig“.`)
+      : "Graue Linien sind Strecken aus früheren Berichten.";
+    formViewer.drawing(zeichnet);
+  }
+  function zeichnenAbbrechen(){ zeichnet = false; aktuelle = []; zeichnenUI(); formLinien(); }
+  $("draw-start").addEventListener("click", () => { zeichnet = true; aktuelle = []; zeichnenUI(); formLinien(); });
+  $("draw-undo").addEventListener("click", () => { aktuelle.pop(); zeichnenUI(); formLinien(); });
+  $("draw-cancel").addEventListener("click", zeichnenAbbrechen);
+  $("draw-done").addEventListener("click", () => {
+    if(aktuelle.length < 2){ $("draw-hint").textContent = "Bitte mindestens 2 Punkte auf dem Plan setzen."; return; }
+    neueStrecken.push({ planId: $("plan-sel").value, punkte: aktuelle.slice(), laenge: null, notiz: "" });
+    zeichnet = false; aktuelle = []; zeichnenUI(); renderStreckenForm(); formLinien();
+  });
+  function renderStreckenForm(){
+    $("strecken-form").innerHTML = neueStrecken.map((st, i) => `<div class="strecke">
+      <div class="schaden-head"><span style="display:flex;gap:8px;align-items:center"><span class="snum neu">${i+1}</span><strong>Strecke ${i+1}</strong></span><button type="button" class="linkbtn" data-srm="${i}">Entfernen</button></div>
+      <div class="row">
+        <label for="st-l-${i}">Länge in Metern<input id="st-l-${i}" data-sl="${i}" type="number" inputmode="decimal" min="0" step="0.1" value="${st.laenge ?? ""}" placeholder="z. B. 45"></label>
+        <label for="st-n-${i}">Notiz<input id="st-n-${i}" data-sn="${i}" autocomplete="off" value="${esc(st.notiz)}" placeholder="z. B. Gehweg"></label>
+      </div></div>`).join("");
+  }
+  $("strecken-form").addEventListener("input", e => {
+    const t = e.target;
+    if(t.dataset.sl != null){ const v = parseFloat(String(t.value).replace(",", ".")); neueStrecken[+t.dataset.sl].laenge = isFinite(v) && v >= 0 ? v : null; }
+    if(t.dataset.sn != null) neueStrecken[+t.dataset.sn].notiz = t.value.trim();
+  });
+  $("strecken-form").addEventListener("click", e => {
+    const b = e.target.closest("[data-srm]"); if(!b) return;
+    neueStrecken.splice(+b.dataset.srm, 1); renderStreckenForm(); formLinien();
+  });
+  function planWaehlen(){
+    const p = planById($("plan-sel").value);
+    $("plan-box").hidden = !p; formViewer.setPlan(p || null);
+    if(p) requestAnimationFrame(() => { formViewer.redraw(); formLinien(); });
+  }
+  $("plan-sel").addEventListener("change", planWaehlen);
+  $("plan-art").addEventListener("change", () => { $("plan-firma-l").hidden = $("plan-art").value !== "Fremdleitungsplan"; });
+  // Passender Plan zur Projektadresse wird vorausgewählt
+  $("adresse").addEventListener("change", () => {
+    if($("plan-sel").value || zeichnet) return;
+    const a = $("adresse").value.trim().toLowerCase(); if(!a) return;
+    const p = plaene.find(p => (p.adresse || "").trim().toLowerCase() === a);
+    if(p){ $("plan-sel").value = p.id; planWaehlen(); }
+  });
+
+  function planName(p){ return `${p.name}${p.art === "Fremdleitungsplan" ? " (Fremdleitung" + (p.firma ? ", " + p.firma : "") + ")" : ""}`; }
+  function fuelleSelect(sel, leer){
+    const cur = sel.value;
+    const sorted = plaene.slice().sort((a,b) => (a.adresse||"").localeCompare(b.adresse||"","de") || (a.name||"").localeCompare(b.name||"","de"));
+    sel.innerHTML = (leer ? `<option value="">${leer}</option>` : "") + sorted.map(p => `<option value="${esc(p.id)}">${esc(planName(p))}${p.adresse ? " – " + esc(p.adresse) : ""}</option>`).join("");
+    if(plaene.some(p => p.id === cur)) sel.value = cur; else if(leer) sel.value = "";
+  }
+  function planDatenNeu(){
+    fuelleSelect($("plan-sel"), "– kein Plan –");
+    if(!zeichnet) planWaehlen(); else formLinien();
+    fuelleSelect($("pl-sel"), "");
+    renderPlanView(); render();
+  }
+
+  // Plan hochladen: Bild direkt, PDF Seite für Seite als Bild
+  function ladeSkript(src){
+    return new Promise((ok, err) => { if(document.querySelector(`script[src="${src}"]`)) return ok(); const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = err; document.head.appendChild(s); });
+  }
+  const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  function canvasZuJpeg(c){ return new Promise(r => c.toBlob(b => r(b), "image/jpeg", 0.85)); }
+  function bildAusBlob(blob, max){
+    return new Promise((ok, err) => {
+      const url = URL.createObjectURL(blob); const img = new Image();
+      img.onload = async () => {
+        const f = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * f); c.height = Math.round(img.naturalHeight * f);
+        const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); const b = await canvasZuJpeg(c); b ? ok({ blob: b, w: c.width, h: c.height }) : err(new Error("bild"));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); err({ code: "unsupported_type" }); };
+      img.src = url;
+    });
+  }
+  async function pdfSeiten(file, max, proSeite){
+    await ladeSkript(PDFJS + "pdf.min.js"); await ladeSkript(PDFJS + "pdf.worker.min.js");
+    const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+    const pdf = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+    const n = Math.min(pdf.numPages, 10);
+    for(let i = 1; i <= n; i++){
+      const page = await pdf.getPage(i); const v1 = page.getViewport({ scale: 1 });
+      const vp = page.getViewport({ scale: Math.min(4, max / Math.max(v1.width, v1.height)) });
+      const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+      const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: g, viewport: vp }).promise;
+      await proSeite({ blob: await canvasZuJpeg(c), w: c.width, h: c.height }, i, pdf.numPages);
+    }
+    return pdf.numPages;
+  }
+  $("plan-file").addEventListener("change", async e => {
+    const file = e.target.files[0]; e.target.value = "";
+    if(!file || !assets || !db || planLaedt) return;
+    planLaedt = true; $("plan-up-label").setAttribute("aria-disabled", "true");
+    const st = t => { $("plan-status").textContent = t; };
+    const basis = (file.name || "Plan").replace(/\.[^.]+$/, "");
+    const meta = { art: $("plan-art").value, firma: $("plan-art").value === "Fremdleitungsplan" ? $("plan-firma").value.trim() : "", adresse: $("adresse").value.trim() };
+    let ersteId = null;
+    const speichernPlan = async (bild, name, pdfAssetId) => {
+      const r = await assets.upload(bild.blob, { type: "image/jpeg" });
+      const ref = await db.collection("plaene").add({ ...meta, name, assetId: r.id, w: bild.w, h: bild.h, pdfAssetId: pdfAssetId || null, hochgeladenAm: new Date().toISOString(), test: true });
+      if(!ersteId) ersteId = ref.id;
+    };
+    try{
+      if(file.type === "application/pdf" || /\.pdf$/i.test(file.name || "")){
+        st("PDF wird gelesen …");
+        let pdfId = null;
+        if(file.size <= 20 * 1048576){ try{ pdfId = (await assets.upload(file, { type: "application/pdf" })).id; }catch(_){} }
+        const n = await pdfSeiten(file, 2600, async (bild, i, gesamt) => {
+          st(`Seite ${i} von ${Math.min(gesamt, 10)} wird hochgeladen …`);
+          await speichernPlan(bild, gesamt > 1 ? `${basis} – Seite ${i}` : basis, pdfId);
+        });
+        st(n > 10 ? `Fertig. Nur die ersten 10 von ${n} Seiten wurden übernommen.` : "Fertig. Plan ist ausgewählt.");
+      } else {
+        st("Plan wird hochgeladen …");
+        await speichernPlan(await bildAusBlob(file, 3000), basis, null);
+        st("Fertig. Plan ist ausgewählt.");
+      }
+      $("plan-neu").open = false;
+      if(ersteId){ const warte = () => planById(ersteId) ? ($("plan-sel").value = ersteId, planWaehlen()) : setTimeout(warte, 300); warte(); }
+    }catch(err){
+      const c = err && err.code;
+      st(c === "too_large" ? "Der Plan ist zu groß (höchstens 20 MB)." :
+         c === "unsupported_type" ? "Diese Datei lässt sich nicht als Plan anzeigen. Bitte Foto oder PDF wählen." :
+         c === "quota_or_state" ? "Der Speicher ist voll. Bitte Geschäftsführung informieren." :
+         "Hochladen fehlgeschlagen. Bitte Verbindung prüfen und erneut versuchen.");
+    }finally{ planLaedt = false; $("plan-up-label").setAttribute("aria-disabled", "false"); }
+  });
+
+  // Reiter "Pläne": alle Strecken eines Plans, Abrechnungsstand
+  let plAuswahl = null;
+  function renderPlanView(){
+    const p = planById($("pl-sel").value) || null;
+    $("pl-empty").hidden = !!plaene.length; $("pl-main").hidden = !p;
+    plViewer.setPlan(p);
+    if(!p) return;
+    const liste = strecken.filter(st => st.planId === p.id).sort((a,b) => (a.datum||"").localeCompare(b.datum||"") || (a.erstelltAm||"").localeCompare(b.erstelltAm||""));
+    let offen = 0, ab = 0;
+    liste.forEach(st => { if(istAb(st)) ab += (+st.laenge || 0); else offen += (+st.laenge || 0); });
+    $("pl-offen").textContent = fmtM(offen); $("pl-ab").textContent = fmtM(ab);
+    $("pl-meta").innerHTML = `${esc(p.art || "Plan")}${p.firma ? " · " + esc(p.firma) : ""}${p.adresse ? " · " + esc(p.adresse) : ""}
+      · <a href="_blob/${esc(p.assetId)}" target="_blank" rel="noopener">Bild öffnen</a>${p.pdfAssetId ? ` · <a href="_blob/${esc(p.pdfAssetId)}" target="_blank" rel="noopener">Original-PDF</a>` : ""}`;
+    plViewer.setLinien(liste.map((st, i) => ({ punkte: pts(st), farbe: istAb(st) ? "var(--ln-ab)" : "var(--ln-offen)", nr: i + 1, dick: st.id === plAuswahl })));
+    $("pl-list").innerHTML = liste.length ? liste.map((st, i) => { const a = istAb(st), ar = abrechnung[st.id]; return `<div class="sitem${st.id === plAuswahl ? " sel" : ""}" data-sid="${esc(st.id)}">
+      <span class="snum${a ? " ab" : ""}">${i+1}</span>
+      <div class="sinfo"><strong>${esc(fmtDatum(st.datum))} · ${st.laenge != null ? esc(fmtM(+st.laenge)) : "ohne Länge"}</strong>
+        <span class="pmeta">${esc(st.bauleiter || "")}${st.notiz ? " · " + esc(st.notiz) : ""}</span></div>
+      <div class="sactions"><span class="pill${a ? " ab-pill" : ""}" style="${a ? "background:var(--ln-ab);color:#fff;border-color:var(--ln-ab)" : ""}">${a ? "abgerechnet" + (ar && ar.am ? " am " + esc(fmtDatum(String(ar.am).slice(0,10))) : "") : "offen"}</span>
+        ${istChef ? `<button type="button" class="btn" data-abr="${esc(st.id)}">${a ? "Zurücknehmen" : "Als abgerechnet markieren"}</button>` : ""}</div>
+    </div>`; }).join("") : '<div class="emptystate">Auf diesem Plan ist noch keine Strecke eingezeichnet.</div>';
+    $("pl-chef-hint").textContent = istChef ? "" : "Nur die Geschäftsführung kann Strecken als abgerechnet markieren.";
+  }
+  $("pl-sel").addEventListener("change", () => { plAuswahl = null; renderPlanView(); requestAnimationFrame(() => plViewer.redraw()); });
+  $("pl-list").addEventListener("click", async e => {
+    const b = e.target.closest("[data-abr]");
+    if(b){
+      e.stopPropagation(); if(!istChef || !db) return;
+      const id = b.dataset.abr, jetzt = !(abrechnung[id] && abrechnung[id].abgerechnet);
+      b.disabled = true;
+      try{ await db.collection("abrechnung").doc(id).set({ abgerechnet: jetzt, am: jetzt ? new Date().toISOString() : null }); }
+      catch(_){ b.disabled = false; b.textContent = "Nicht gespeichert, bitte erneut tippen"; }
+      return;
+    }
+    const it = e.target.closest("[data-sid]"); if(!it) return;
+    plAuswahl = plAuswahl === it.dataset.sid ? null : it.dataset.sid; renderPlanView();
+  });
+  window.addEventListener("resize", () => { formViewer.redraw(); plViewer.redraw(); });
+
+  // ---------- Übersicht ----------
+  function fillSelect(sel, values, fmt){
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Alle</option>' + values.map(v => `<option value="${esc(v)}">${esc(fmt ? fmt(v) : v)}</option>`).join("");
+    if(values.map(String).includes(cur)) sel.value = cur;
+  }
+  function render(){
+    const sorted = berichte.slice().sort((a,b) => (b.datum||"").localeCompare(a.datum||"") || (b.erstelltAm||"").localeCompare(a.erstelltAm||""));
+    $("count").textContent = sorted.length ? "(" + sorted.length + ")" : "";
+
+    const bls = [...new Set(sorted.map(b => b.bauleiter).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"de"));
+    const kwKey = b => { const w = isoWeek(b.datum); return w ? `${w.jahr}-${String(w.kw).padStart(2,"0")}` : null; };
+    const kws = [...new Set(sorted.map(kwKey).filter(Boolean))].sort().reverse();
+    fillSelect($("flt-bl"), bls);
+    fillSelect($("flt-kw"), kws, k => { const [j,w] = k.split("-"); return `KW ${+w} / ${j}`; });
+    $("bauleiter-liste").innerHTML = bls.map(n => `<option value="${esc(n)}">`).join("");
+    const arr = v => Array.isArray(v) ? v : [];
+    const namen = [...new Set(sorted.flatMap(b => arr(b.mitarbeiter).concat(arr(b.samstagMitarbeiter))))].sort((a,b)=>a.localeCompare(b,"de"));
+    $("ma-liste").innerHTML = namen.map(n => `<option value="${esc(n)}">`).join("");
+    const firmen = [...new Set(sorted.flatMap(b => arr(b.kabelschaeden).map(k => k && k.firma)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"de"));
+    $("firma-liste").innerHTML = firmen.map(n => `<option value="${esc(n)}">`).join("");
+
+    const fbl = $("flt-bl").value, fkw = $("flt-kw").value;
+    const shown = sorted.filter(b => (!fbl || b.bauleiter === fbl) && (!fkw || kwKey(b) === fkw));
+    const list = $("list");
+    if(!berichte.length){ list.innerHTML = '<div class="emptystate">Noch keine Berichte. Den ersten Bericht unter „Bericht erfassen“ anlegen.</div>'; return; }
+    if(!shown.length){ list.innerHTML = '<div class="emptystate">Keine Berichte für diese Auswahl.</div>'; return; }
+    list.innerHTML = shown.map(b => {
+      const ma = Array.isArray(b.mitarbeiter) ? b.mitarbeiter : [];
+      const w = isoWeek(b.datum);
+      const sa = Array.isArray(b.samstagMitarbeiter) ? b.samstagMitarbeiter : [];
+      const ks = Array.isArray(b.kabelschaeden) ? b.kabelschaeden.filter(Boolean) : [];
+      const docs = Array.isArray(b.dokumente) ? b.dokumente.filter(d => d && /^[0-9a-f]{32}$/.test(d.id || "")) : [];
+      return `<details class="report">
+        <summary>
+          <div class="rhead"><span class="rdate">${esc(fmtDatum(b.datum))}</span><span class="rkw">KW ${esc(w ? w.kw : b.kw)}</span></div>
+          <div class="raddr">${esc(b.adresse)}</div>
+          <div class="rmeta">
+            <span>${esc(b.bauleiter)}</span>
+            ${b.nvt ? `<span>${esc(b.nvt)}</span>` : ""}
+            <span><b>${esc(b.anzahlMitarbeiter ?? ma.length)}</b> MA</span>
+            <span><b>${esc(b.hausanschluesse ?? 0)}</b> HA</span>
+            <span><b>${esc(b.beginn)}–${esc(b.ende)}</b></span>
+            <span class="pill ${b.samstag === "gearbeitet" ? "sa" : ""}">Sa ${esc(b.samstag || "–")}${b.samstag === "gearbeitet" && sa.length ? " (" + sa.length + ")" : ""}</span>
+            ${docs.length ? `<span class="pill">${docs.length} ${docs.length === 1 ? "Anhang" : "Anhänge"}</span>` : ""}
+            ${ks.length ? `<span class="pill ks">Kabelschaden${ks.length > 1 ? " ×" + ks.length : ""}</span>` : ""}
+          </div>
+          <span class="more">Details anzeigen</span>
+        </summary>
+        <div class="rbody"><dl>
+          <div><dt>Arbeitszeit</dt><dd>${esc(b.beginn)} bis ${esc(b.ende)} Uhr, Pause ${esc(b.pause ?? 0)} Min., reine Arbeitszeit ${esc(fmtDauer(netto(b.beginn,b.ende,b.pause)))}</dd></div>
+          <div><dt>Eingesetzte Mitarbeiter (${esc(b.anzahlMitarbeiter ?? ma.length)})</dt><dd>${ma.length ? esc(ma.join(", ")) : "–"}</dd></div>
+          <div><dt>Leistungsergebnisse und Änderungen</dt><dd>${esc(b.leistungen) || "–"}</dd></div>
+          <div><dt>Hergestellte Hausanschlüsse</dt><dd>${esc(b.hausanschluesse ?? 0)}</dd></div>
+          <div><dt>Bemerkungen und Sonstiges</dt><dd>${esc(b.bemerkungen) || "–"}</dd></div>
+          ${ks.length ? ks.map((k,i) => `<div class="ks-item"><dt>Kabelschaden${ks.length > 1 ? " " + (i+1) : ""}</dt><dd>${esc([k.strasse, k.hausnummer].filter(Boolean).join(" ")) || "–"}
+Firma: ${esc(k.firma) || "–"}
+Beschädigt von: ${esc(Array.isArray(k.verursacher) ? k.verursacher.join(", ") : "") || "–"}</dd></div>`).join("") : ""}
+          ${docs.length ? `<div><dt>Dokumente und Fotos (${docs.length})</dt><dd class="attach">${docs.map(d => `<a href="_blob/${d.id}" target="_blank" rel="noopener" title="${esc(d.name)}">${String(d.typ).startsWith("image/") ? `<img src="_blob/${d.id}" alt="${esc(d.name)}" loading="lazy">` : `PDF<br>${esc(d.name)}`}</a>`).join("")}</dd></div>` : ""}
+          ${(() => { const sts = strecken.filter(st => st.berichtId === b.id); if(!sts.length) return "";
+            const m = sts.reduce((a,st) => a + (+st.laenge || 0), 0); const p = planById(sts[0].planId);
+            return `<div><dt>Strecken (${sts.length})</dt><dd>${m ? esc(fmtM(m)) + " eingezeichnet" : "eingezeichnet"}${p ? " auf „" + esc(p.name) + "“" : ""} <button type="button" class="linkish" data-showplan="${esc(sts[0].planId)}">Auf dem Plan zeigen</button></dd></div>`; })()}
+          <div><dt>Samstag</dt><dd>${esc(b.samstag || "–")}${sa.length ? ": " + esc(sa.join(", ")) : ""}</dd></div>
+        </dl></div>
+      </details>`;
+    }).join("");
+  }
+  $("list").addEventListener("click", e => { const b = e.target.closest("[data-showplan]"); if(b){ e.preventDefault(); $("pl-sel").value = b.dataset.showplan; zeige("plan"); renderPlanView(); } });
+  $("flt-bl").addEventListener("change", render);
+  $("flt-kw").addEventListener("change", render);
+
+  // ---------- Reiter ----------
+  function zeige(tab){
+    const form = tab === "form";
+    $("view-form").hidden = !form; $("view-list").hidden = tab !== "list"; $("view-plan").hidden = tab !== "plan"; $("view-urlaub").hidden = tab !== "urlaub"; $("savebar").hidden = !form;
+    $("tab-form").setAttribute("aria-selected", form); $("tab-list").setAttribute("aria-selected", tab === "list"); $("tab-plan").setAttribute("aria-selected", tab === "plan"); $("tab-urlaub").setAttribute("aria-selected", tab === "urlaub");
+    if(tab === "plan") requestAnimationFrame(() => plViewer.redraw());
+    if(form) requestAnimationFrame(() => formViewer.redraw());
+    try{ localStorage.setItem(LS_KEY + "-tab", tab); }catch(e){}
+    window.scrollTo({top:0});
+  }
+  $("tab-form").addEventListener("click", () => zeige("form"));
+  $("tab-list").addEventListener("click", () => zeige("list"));
+  $("tab-plan").addEventListener("click", () => zeige("plan"));
+  $("tab-urlaub").addEventListener("click", () => zeige("urlaub"));
+  let startTab = location.hash === "#uebersicht" ? "list" : location.hash === "#plaene" ? "plan" : location.hash === "#urlaub" ? "urlaub" : "form";
+  if(!location.hash){ try{ startTab = localStorage.getItem(LS_KEY + "-tab") || "form"; }catch(e){} }
+
+  // ---------- Start ----------
+  $("datum").value = heute(); updKW(); updDauer(); renderChips(); render(); zeige(startTab);
+  if(window.claude && typeof window.claude.use === "function"){
+    window.claude.use("db").then(d => { if(d){ db = d; startGemeinsam(); } else startLokal(); }).catch(startLokal);
+    window.claude.use("assets").then(a => { uploadAn(a || null); planUploadAn(!!a); }).catch(() => { uploadAn(null); planUploadAn(false); });
+    window.claude.use("user").then(async u => { istChef = u ? !!(await u.isOwner()) : false; renderPlanView(); }).catch(() => {});
+  } else startLokal();
+})();
+</script>
+<script>
+/* Ergänzung Version 6: Mitarbeiter Urlaub (eigene Sammlung "urlaub", bestehende Daten bleiben unberührt) */
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const LS_U = "intera-tagesberichte-v1-urlaub";
+  let udb = null, urlaub = [], speichert = false;
+  const gueltig = s => /^\d{4}-\d{2}-\d{2}$/.test(s || "");
+  function heute(){ const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+  function fmtD(s){ const d = new Date(s + "T12:00:00"); return isNaN(d) ? String(s||"") : d.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}); }
+  function arbeitstage(von, bis){
+    if(!gueltig(von) || !gueltig(bis) || bis < von) return null;
+    const d = new Date(von + "T12:00:00Z"), e = new Date(bis + "T12:00:00Z"); let n = 0;
+    for(let i = 0; d <= e && i < 800; i++){ const w = d.getUTCDay(); if(w !== 0 && w !== 6) n++; d.setUTCDate(d.getUTCDate() + 1); }
+    return n;
+  }
+  function lsRead(){ try{ const v = JSON.parse(localStorage.getItem(LS_U)); return Array.isArray(v) ? v : []; }catch(e){ return []; } }
+  function lsWrite(l){ try{ localStorage.setItem(LS_U, JSON.stringify(l)); return true; }catch(e){ return false; } }
+  function msg(t, cls){ const m = $("u-msg"); m.textContent = t; m.className = "msg " + (cls || ""); }
+
+  function updTage(){
+    const n = arbeitstage($("u-von").value, $("u-bis").value);
+    $("u-tage").innerHTML = "Arbeitstage (Mo–Fr): <b>" + (n == null ? "–" : esc(n)) + "</b>";
+  }
+  $("u-von").addEventListener("input", () => {
+    const v = $("u-von").value; $("u-bis").min = v || "";
+    if(v && (!$("u-bis").value || $("u-bis").value < v)) $("u-bis").value = v;
+    updTage();
+  });
+  $("u-bis").addEventListener("input", updTage);
+
+  function render(){
+    const h = heute(), arr = urlaub.filter(u => u && gueltig(u.von) && gueltig(u.bis));
+    const namen = [...new Set(arr.map(u => u.mitarbeiter).filter(Boolean))].sort((a,b) => a.localeCompare(b,"de"));
+    const sel = $("u-flt"), cur = sel.value;
+    sel.innerHTML = '<option value="">Alle</option>' + namen.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+    if(namen.includes(cur)) sel.value = cur;
+    $("u-heute").textContent = arr.filter(u => u.von <= h && u.bis >= h).length;
+    $("u-geplant").textContent = arr.filter(u => u.von > h).length;
+    const f = sel.value, alle = $("u-zeit").value === "alle";
+    const shown = arr.filter(u => (!f || u.mitarbeiter === f) && (alle || u.bis >= h))
+      .sort((a,b) => a.von.localeCompare(b.von) || (a.mitarbeiter||"").localeCompare(b.mitarbeiter||"","de"));
+    if(alle) shown.reverse();
+    $("u-list").innerHTML = shown.length ? shown.map(u => {
+      const st = u.bis < h ? "vorbei" : u.von <= h ? "jetzt" : "geplant";
+      const n = u.arbeitstage ?? arbeitstage(u.von, u.bis);
+      return `<div class="uitem${st === "vorbei" ? " alt" : ""}">
+        <div class="uhead"><strong>${esc(u.mitarbeiter)}</strong><span class="pill ${st}">${st === "jetzt" ? "jetzt im Urlaub" : st}</span></div>
+        <span class="udate">${esc(fmtD(u.von))}${u.bis !== u.von ? " – " + esc(fmtD(u.bis)) : ""}</span>
+        <span class="pmeta">${n != null ? esc(n) + (n === 1 ? " Arbeitstag" : " Arbeitstage") : ""}${u.eingetragenVon ? " · eingetragen von " + esc(u.eingetragenVon) : ""}</span>
+      </div>`; }).join("")
+      : `<div class="emptystate">${arr.length ? "Kein Urlaub für diese Auswahl." : "Noch kein Urlaub eingetragen. Oben Mitarbeiter und Tage eintragen und speichern."}</div>`;
+  }
+  $("u-flt").addEventListener("change", render);
+  $("u-zeit").addEventListener("change", render);
+
+  $("u-save").addEventListener("click", async () => {
+    if(speichert) return;
+    document.querySelectorAll("#view-urlaub .field-err").forEach(el => el.classList.remove("field-err"));
+    const name = $("u-name").value.trim(), von = $("u-von").value, bis = $("u-bis").value, wer = $("u-wer").value.trim();
+    const fehlt = [];
+    [["u-name","Mitarbeiter",name],["u-von","erster Urlaubstag",von],["u-bis","letzter Urlaubstag",bis],["u-wer","eingetragen von",wer]].forEach(([id,t,v]) => { if(!v){ fehlt.push(t); $(id).closest("label").classList.add("field-err"); } });
+    if(fehlt.length) return msg("Bitte ausfüllen: " + fehlt.join(", ") + ".", "err");
+    if(bis < von){ $("u-bis").closest("label").classList.add("field-err"); return msg("Der letzte Urlaubstag darf nicht vor dem ersten liegen.", "err"); }
+    const doppelt = urlaub.find(u => u && (u.mitarbeiter||"").toLowerCase() === name.toLowerCase() && u.von <= bis && u.bis >= von);
+    if(doppelt) return msg(`${name} hat in dieser Zeit schon Urlaub eingetragen (${fmtD(doppelt.von)} – ${fmtD(doppelt.bis)}).`, "err");
+    const rec = { art: "Urlaub", mitarbeiter: name, von, bis, arbeitstage: arbeitstage(von, bis), eingetragenVon: wer, erstelltAm: new Date().toISOString(), test: true };
+    speichert = true; $("u-save").disabled = true; msg("Speichert …");
+    try{
+      if(udb) await udb.collection("urlaub").add(rec);
+      else { const l = lsRead(); l.push({ ...rec, id: "lokal-" + Date.now() }); if(!lsWrite(l)) throw new Error("lokal"); urlaub = l; render(); }
+      msg(`Gespeichert: ${name}, ${fmtD(von)}${bis !== von ? " – " + fmtD(bis) : ""}`, "ok");
+      $("u-name").value = ""; $("u-von").value = ""; $("u-bis").value = ""; $("u-bis").min = ""; updTage();
+    }catch(e){
+      const c = e && e.code;
+      msg(c === "invalid_argument" || c === "permission_denied" ? "Sie haben keine Berechtigung zum Speichern. Bitte Freigabe prüfen." :
+          c === "quota_exceeded" ? "Der Speicher ist voll." : "Nicht gespeichert. Bitte Verbindung prüfen und erneut tippen.", "err");
+    }finally{ speichert = false; $("u-save").disabled = false; }
+  });
+
+  function lokal(){ udb = null; urlaub = lsRead(); render(); }
+  updTage(); render();
+  if(window.claude && typeof window.claude.use === "function"){
+    window.claude.use("db").then(d => {
+      if(!d) return lokal();
+      udb = d;
+      d.collection("urlaub").onSnapshot(snap => { urlaub = snap.docs.map(x => ({ ...x.data(), id: x.id })); render(); },
+        () => msg("Verbindung unterbrochen. Seite neu laden.", "err"));
+    }).catch(lokal);
+  } else lokal();
+})();
+</script>
+
+</body></html>
