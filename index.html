@@ -181,7 +181,9 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
           <button type="button" class="cat-btn" data-cat="masch" data-i18n="catMasch">Radlader, Bagger</button>
         </div>
         <label for="fahrzeug" data-i18n="lFahrzeug">Fahrzeug / Maschine</label>
-        <select id="fahrzeug"></select>
+        <input type="search" id="fz-suche" autocomplete="off" placeholder="🔍 Suchen: Nummer oder Name">
+        <select id="fahrzeug" style="margin-top:8px"></select>
+        <span class="hint" id="fz-treffer"></span>
       </div>
 
       <div id="machine-wrap">
@@ -425,7 +427,9 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     calcProStd:{de:'l pro Bagger-Stunde', ru:'л на моточас'},
     twVorbelegt:{de:'aus letztem Tankwagen-Ende übernommen', ru:'взято из последнего остатка бочки'},
     zeitraum:{de:'Zeitraum', ru:'Период'},
-    kanisterTitle:{de:'Kanister je Brigade', ru:'Канистры по бригадам'}
+    kanisterTitle:{de:'Kanister je Brigade', ru:'Канистры по бригадам'},
+    treffer:{de:'Treffer', ru:'найдено'},
+    sucheHint:{de:'🔍 Suchen: Nummer oder Name', ru:'🔍 Поиск: номер или название'}
   };
   var currentLang = (localStorage.getItem('tankprotokoll_lang') || 'de');
   function t(key){ return (L[key] && L[key][currentLang]) || (L[key] && L[key].de) || key; }
@@ -436,6 +440,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     document.querySelectorAll('.lang-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-lang') === currentLang);
     });
+    if(document.getElementById('fz-suche')) document.getElementById('fz-suche').placeholder = t('sucheHint');
     if(typeof fillFahrzeugListe === 'function' && document.getElementById('fahrzeug')) { try{ fillFahrzeugListe(); }catch(e){} }
     updateStandLabel();
   }
@@ -500,15 +505,37 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     var ml2 = document.querySelector('label[for="menge"]');
     if(ml2) ml2.textContent = t('lMenge');
     var istKm = KM_MASCHINEN.indexOf(machineEl.value) !== -1 || (!machineEl.value && typeof currentCat !== 'undefined' && currentCat === 'fzg');
+    // Rüttelplatte, Stampfer usw. haben keinen Zähler → Feld freiwillig
+    standEl.required = !(typeof OHNE_ZAEHLER !== 'undefined' && OHNE_ZAEHLER.indexOf(machineEl.value) !== -1);
     standLabelEl.textContent = istKm ? t('lKilometerstand') : t('lBetriebsstunden');
     standEl.placeholder = istKm ? 'z. B. 185400' : 'z. B. 1234';
   }
   // ---------- Fahrzeug- und Maschinenliste (Stand 10.11.2026) ----------
   var FZG = ["MAN 460","MAN 544","MAN 456","MAN 454","MAN 477","MAN 230","MAN 665","VW 877","Sprinter 311","HET 1011","Vito 530","Vito 630","Ford 1889","Volvo 660","Opel 992","Skoda 2388","Fahrzeug 777"];
-  var MASCH = ["KAT 603214","KAT 603121","KAT 602721","Ratlader 3089087","Ratlader 3089161","Ratlader 3089166","Ratlader 3090621","Ratlader 3089112","Bagger ET18 E1202P07944","Bagger ET18 E1202K08013","Bagger ET18 E1202J08661","Bagger ET18 E1202C08726","Bagger ET18 E1202A09166","Bagger ET18 E1202J08840","Minibagger ET24 WNCE1204K00003444","Radlader 3080469","Radlader 3080534","Radlader 3085415","Radlader 3085426","Radlader 3086605","Minibagger 603414","Minibagger 603204"];
-  var UNBEST = ["Ratlader 3090621"];
+  var MASCH = ["KAT 603214","KAT 603121","KAT 602721","Ratlader 3089087","Ratlader 3089161","Ratlader 3089166","Ratlader 3090621","Ratlader 3089112","Bagger ET18 E1202P07944","Bagger ET18 E1202K08013","Bagger ET18 E1202J08661","Bagger ET18 E1202C08726","Bagger ET18 E1202A09166","Bagger ET18 E1202J08840","Minibagger ET24 WNCE1204K00003444","Radlader 3080469","Radlader 3080534","Radlader 3085415","Radlader 3085426","Radlader 3086605","Minibagger 603414","Minibagger 603204",
+    // Ergänzt 12.11.2026 aus Anlagenliste „aktuell_Baumaschinen“
+    "Radlader 3090633","Raddumper WNC02502CPAL01217",
+    "Rüttelplatte WP1550AW 11438041","Rüttelplatte BPS1340 11451796","Rüttelplatte BPS1340 11451797","Rüttelplatte DPU3060 11779742","Rüttelplatte DPU3060 11779739","Rüttelplatte DPU3060 11793479",
+    "Vibrationsplatte DPU3060 11793476","Vibrationsplatte DPU3060 11792690","Vibrationsplatte APF 20/50","Vibrationsplatte Bomag BRP 35/60",
+    "Stampfer BS60-4 11816014","Stampfer BS60-4 11816020","Stampfer BS60-4 11816021","Stampfer BS60-4 11816022","Stampfer BS60-4 (ohne Nr.)","Stampfer BS 60-2","Stampfer BS 50-2","Stampfer Husqvarna LT5005 202313100460","Stampfer Husqvarna LT6005 20210600958","Stampfer Husqvarna LT6005 20210600961"];
+  // 3090621 steht in der Anlagenliste vom 12.11.2026 → bestätigt
+  var UNBEST = [];
+  // Geräte ohne Stundenzähler: Feld Betriebsstunden freiwillig
+  var OHNE_ZAEHLER = ['Rüttelplatte','Sonstige','Erdrakete'];
+  // Wunsch Viktoria 12.11.2026: lange Seriennummern nur mit den letzten 7 Zeichen anzeigen/speichern.
+  // Die Suche findet trotzdem auch die volle Nummer.
+  function kurz(n){
+    var teile = String(n).split(' ');
+    var last = teile[teile.length - 1];
+    if(teile.length > 1 && last.length > 7 && /\d/.test(last)) teile[teile.length - 1] = last.slice(-7);
+    return teile.join(' ');
+  }
+  var FZG_K = FZG.map(kurz), MASCH_K = MASCH.map(kurz);
   // Maschinentyp wird vorbelegt und kann geändert werden
   function typVon(name){
+    if(/^Raddumper/.test(name)) return 'Dumper';
+    if(/^(Rüttelplatte|Vibrationsplatte)/.test(name)) return 'Rüttelplatte';
+    if(/^Stampfer/.test(name)) return 'Sonstige';
     if(/^(MAN|HET|Volvo)\b/.test(name)) return 'LKW';
     if(/^(Opel|Skoda|Fahrzeug)\b/.test(name)) return 'PKW';
     if(FZG.indexOf(name) !== -1) return 'Transporter';
@@ -527,8 +554,17 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   var currentMode = 'tanken';
   var currentCat = localStorage.getItem('tankprotokoll_cat') || 'fzg';
 
+  var fzSuche = document.getElementById('fz-suche');
+  var fzTreffer = document.getElementById('fz-treffer');
+  function norm(x){ return String(x).toLowerCase().replace(/[\s\-\/\.]/g, ''); }
   function fillFahrzeugListe(){
-    var list = currentCat === 'masch' ? MASCH : FZG;
+    var q = fzSuche ? norm(fzSuche.value) : '';
+    var list = currentCat === 'masch' ? MASCH_K : FZG_K;
+    if(q){
+      var voll = FZG.concat(MASCH);
+      list = FZG_K.concat(MASCH_K).filter(function(n, i){ return norm(n).indexOf(q) !== -1 || norm(voll[i]).indexOf(q) !== -1; });
+      fzTreffer.textContent = list.length + ' ' + t('treffer');
+    } else if(fzTreffer){ fzTreffer.textContent = ''; }
     var keep = fahrzeugEl.value;
     var html = '<option value="" disabled selected>' + escapeHtml(t('optChoose')) + '</option>';
     list.forEach(function(n){
@@ -537,10 +573,18 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     html += '<option value="__andere">' + escapeHtml(t('optAndere')) + '</option>';
     fahrzeugEl.innerHTML = html;
     if(keep && (list.indexOf(keep) !== -1 || keep === '__andere')) fahrzeugEl.value = keep;
+    if(q && list.length === 1 && fahrzeugEl.value !== list[0]){ fahrzeugEl.value = list[0]; fahrzeugGewaehlt(); }
     document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cat') === currentCat); });
   }
-  fahrzeugEl.addEventListener('change', function(){
+  fzSuche.addEventListener('input', function(){ fillFahrzeugListe(); });
+  fahrzeugEl.addEventListener('change', fahrzeugGewaehlt);
+  function fahrzeugGewaehlt(){
     var v = fahrzeugEl.value;
+    if(v && v !== '__andere'){
+      var neuCat = MASCH_K.indexOf(v) !== -1 ? 'masch' : 'fzg';
+      if(neuCat !== currentCat){ currentCat = neuCat; try{ localStorage.setItem('tankprotokoll_cat', currentCat); }catch(e){}
+        document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cat') === currentCat); }); }
+    }
     if(v === '__andere'){
       serialEl.value = '';
       machineEl.value = currentCat === 'masch' ? 'Bagger' : 'LKW';
@@ -551,11 +595,12 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     }
     updateStandLabel();
     saveDraft();
-  });
+  }
   document.querySelectorAll('.cat-btn').forEach(function(b){
     b.addEventListener('click', function(){
       currentCat = b.getAttribute('data-cat');
       try{ localStorage.setItem('tankprotokoll_cat', currentCat); }catch(e){}
+      fzSuche.value = '';
       fahrzeugEl.value = '';
       serialEl.value = '';
       machineEl.value = '';
@@ -1095,7 +1140,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   function resetForm(){
     baustelleEl.value = ''; tankquelleEl.value = ''; machineEl.value = ''; serialEl.value = ''; standEl.value = ''; mengeEl.value = '';
     kartennummerEl.value = ''; anfangEl.value = ''; endeEl.value = ''; diffOut.textContent = '–'; brigadeEl.value = '';
-    fahrzeugEl.value = ''; bemerkungEl.value = ''; erstDatumEl.value = ''; twHint.hidden = true; kanisterVorFor = null;
+    fahrzeugEl.value = ''; bemerkungEl.value = ''; erstDatumEl.value = ''; fzSuche.value = ''; fillFahrzeugListe(); twHint.hidden = true; kanisterVorFor = null;
     uhrzeitEl.value = nowHM();
     if(currentMode === 'kanister') machineEl.value = 'Kanister';
     updateMachineMode();
@@ -1145,7 +1190,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       errEl.hidden = false;
       return;
     }
-    if(!istKanister && (!serial || !isFinite(stand))){
+    if(!istKanister && (!serial || (!isFinite(stand) && OHNE_ZAEHLER.indexOf(machine) === -1))){
       errEl.textContent = t('fillAll');
       errEl.hidden = false;
       return;
