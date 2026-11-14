@@ -491,6 +491,14 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     var s = String(v).trim().replace(',', '.');
     return parseFloat(s);
   }
+  // Kilometerstand: ganze Zahl, Punkt/Komma/Leerzeichen = Tausendertrennzeichen
+  // (z. B. „244.766“ = 244766 km, Wunsch Viktoria 14.11.2026)
+  function toKm(v){
+    if(v === null || v === undefined) return NaN;
+    var s = String(v).trim().replace(/[.,\s\u00a0']/g, '');
+    if(!/^\d+$/.test(s)) return NaN;
+    return parseInt(s, 10);
+  }
 
   // Maschinen mit Kilometerstand (alles andere -> Betriebsstunden)
   var KM_MASCHINEN = ['LKW','Transporter','PKW'];
@@ -1165,6 +1173,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     var uhrzeit = uhrzeitEl.value;
     var bemerkung = bemerkungEl.value.trim();
     var istKm = KM_MASCHINEN.indexOf(machine) !== -1;
+    if(!istKanister && istKm) stand = toKm(standEl.value);
     var menge = toNum(mengeEl.value);
     var kartennummer = kartennummerEl.value.trim();
     var anfang = istTankwagen ? toNum(anfangEl.value) : null;
