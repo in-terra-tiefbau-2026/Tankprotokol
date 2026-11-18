@@ -1,7 +1,7 @@
 // Minimaler Service Worker: lädt die App-Hülle auch bei kurzzeitig schlechtem Netz auf der Baustelle.
 // Gespeicherte Daten selbst kommen weiterhin live von Supabase, sobald wieder Netz da ist.
 // Strategie: Netzwerk zuerst (damit Code-Änderungen sofort ankommen), Cache nur als Rückfalloption bei schlechtem/keinem Netz.
-var CACHE = 'tankprotokoll-shell-v13';
+var CACHE = 'tankprotokoll-shell-v14';
 var SHELL = ['./index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', function(event){
@@ -28,7 +28,8 @@ self.addEventListener('fetch', function(event){
   if(url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(req).then(function(res){
+    // HTTP-Cache umgehen (GitHub Pages hält Seiten sonst bis 10 Min.), damit das iPhone sofort die neue Version bekommt
+    fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then(function(res){
       if(res && res.ok){
         caches.open(CACHE).then(function(cache){ cache.put(req, res.clone()); });
       }

@@ -313,6 +313,8 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   </div>
 </div>
 
+<p class="muted" style="text-align:center;font-size:12px;margin-top:24px">App-Version 13 · 18.11.2026</p>
+
 <div class="lightbox" id="lightbox" hidden>
   <img id="lightbox-img" alt="Lieferschein groß">
 </div>
@@ -1509,7 +1511,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
 
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('sw.js').catch(function(){});
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function(r){ try{ r.update(); }catch(e){} }).catch(function(){});
     });
   }
 
