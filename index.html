@@ -146,7 +146,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   <div class="modetabs" role="group">
     <button type="button" class="mode-btn active" data-mode="tanken" data-i18n="modeTanken">Tanken</button>
     <button type="button" class="mode-btn" data-mode="kanister" data-i18n="modeKanister">Kanister an Brigade</button>
-    <button type="button" class="mode-btn" data-mode="fass" data-i18n="modeFass">Große Bochka befüllen</button>
+    <button type="button" class="mode-btn" data-mode="fass" id="fass-tab" hidden data-i18n="modeFass">Große Bochka befüllen</button>
   </div>
 
   <div class="card">
@@ -887,9 +887,15 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     });
   });
 
+  // Reiter „Große Bochka befüllen“ nur für Herasimov (Wunsch Viktoria 18.11.2026)
+  var FASS_LOGINS = ['herasimov@in-terra.de'];
+  var fassErlaubt = false;
   function fillMitarbeiterFromSession(session){
     var email = (session && session.user && session.user.email) || '';
     mitarbeiterEl.value = email;
+    fassErlaubt = FASS_LOGINS.indexOf(email.trim().toLowerCase()) !== -1;
+    document.getElementById('fass-tab').hidden = !fassErlaubt;
+    if(!fassErlaubt && currentMode === 'fass') setMode('tanken');
   }
 
   var auswertungCardEl = document.getElementById('auswertung-card');
@@ -1065,7 +1071,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       if(!raw) return;
       var draft = JSON.parse(raw);
       var hasContent = false;
-      if(draft._mode === 'kanister' || draft._mode === 'fass') setMode(draft._mode);
+      if(draft._mode === 'kanister' || (draft._mode === 'fass' && fassErlaubt)) setMode(draft._mode);
       draftFields.forEach(function(el){
         if(draft[el.id]){
           el.value = draft[el.id];
