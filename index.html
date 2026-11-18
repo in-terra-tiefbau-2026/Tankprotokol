@@ -776,6 +776,8 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
         var own = entriesCache.filter(function(e){ return (e.tankquelle === 'Tankwagen' || e.maschine === 'Tankwagen') && e.tankwagen_ende != null; });
         if(own.length) v = Number(own[0].tankwagen_ende);
       }
+      // Bochka befüllen: negativer Rechenstand (Befüllungen fehlten bisher) wird nicht übernommen, dann von Hand eintragen
+      if(currentMode === 'fass' && v != null && v < 0) v = null;
       if(v != null && isFinite(v) && !anfangEl.value && (tankquelleEl.value === 'Tankwagen' || currentMode === 'fass')){
         anfangEl.value = String(v).replace('.', ',');
         twHint.textContent = t('twVorbelegt'); twHint.hidden = false;
