@@ -149,6 +149,8 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     <button type="button" class="mode-btn" data-mode="fass" id="fass-tab" hidden data-i18n="modeFass">Große Bochka befüllen</button>
   </div>
 
+  <div class="calc-box" id="fass-stand" hidden style="margin:0 0 18px;font-size:17px"></div>
+
   <div class="card">
     <form id="form">
       <label for="mitarbeiter" data-i18n="lMitarbeiter">Name (Mitarbeiter)</label>
@@ -313,7 +315,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   </div>
 </div>
 
-<p class="muted" style="text-align:center;font-size:12px;margin-top:24px">App-Version 13 · 18.11.2026</p>
+<p class="muted" style="text-align:center;font-size:12px;margin-top:24px">App-Version 14 · 18.11.2026</p>
 
 <div class="lightbox" id="lightbox" hidden>
   <img id="lightbox-img" alt="Lieferschein groß">
@@ -455,7 +457,9 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     fassTitle:{de:'Große Bochka', ru:'Большая бочка'},
     fassBefuellt:{de:'befüllt', ru:'залито'},
     fassAusgegeben:{de:'ausgegeben', ru:'выдано'},
-    fassStand:{de:'letzter Stand', ru:'последний остаток'}
+    fassStand:{de:'letzter Stand', ru:'последний остаток'},
+    fassJetzt:{de:'🛢 In der Bochka jetzt', ru:'🛢 В бочке сейчас'},
+    fassUnbekannt:{de:'🛢 Stand der Bochka unbekannt – bitte beim nächsten Befüllen eintragen, wie viel vorher drin war.', ru:'🛢 Остаток в бочке неизвестен – при следующей заправке бочки укажите, сколько было до заправки.'}
   };
   var currentLang = (localStorage.getItem('tankprotokoll_lang') || 'de');
   function t(key){ return (L[key] && L[key][currentLang]) || (L[key] && L[key].de) || key; }
@@ -470,6 +474,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     if(typeof fillFahrzeugListe === 'function' && document.getElementById('fahrzeug')) { try{ fillFahrzeugListe(); }catch(e){} }
     updateStandLabel();
     updateFassLabels();
+    if(typeof fassErlaubt !== 'undefined' && fassErlaubt) updateFassStand();
   }
   document.querySelectorAll('.lang-btn').forEach(function(b){
     b.addEventListener('click', function(){
@@ -901,6 +906,18 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     fassErlaubt = FASS_LOGINS.indexOf(email.trim().toLowerCase()) !== -1;
     document.getElementById('fass-tab').hidden = !fassErlaubt;
     if(!fassErlaubt && currentMode === 'fass') setMode('tanken');
+    updateFassStand();
+  }
+  // Anzeige oben: aktueller Stand der Bochka (nur für Herasimov), wird nach jedem Speichern neu geladen
+  function updateFassStand(){
+    var box = document.getElementById('fass-stand');
+    if(!fassErlaubt){ box.hidden = true; return; }
+    supabase.rpc('last_tankwagen_ende').then(function(res){
+      var v = (!res.error && res.data != null) ? Number(res.data) : null;
+      if(v == null || !isFinite(v) || v < 0){ box.textContent = t('fassUnbekannt'); }
+      else { box.innerHTML = '<b>' + escapeHtml(t('fassJetzt')) + ': ' + fmtNum(v) + ' l</b>'; }
+      box.hidden = false;
+    });
   }
 
   var auswertungCardEl = document.getElementById('auswertung-card');
@@ -1034,6 +1051,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
         }
         entriesCache = res.data || [];
         render();
+        updateFassStand();
       });
   }
 
