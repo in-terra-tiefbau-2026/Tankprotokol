@@ -146,6 +146,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   <div class="modetabs" role="group">
     <button type="button" class="mode-btn active" data-mode="tanken" data-i18n="modeTanken">Tanken</button>
     <button type="button" class="mode-btn" data-mode="kanister" data-i18n="modeKanister">Kanister an Brigade</button>
+    <button type="button" class="mode-btn" data-mode="fass" data-i18n="modeFass">Große Bochka befüllen</button>
   </div>
 
   <div class="card">
@@ -164,16 +165,21 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
         </div>
       </div>
 
-      <label for="baustelle" data-i18n="lBaustelle">Baustelle</label>
+      <label for="baustelle" id="baustelle-label" data-i18n="lBaustelle">Baustelle</label>
       <input type="text" id="baustelle" placeholder="z. B. Hannover, Dragonerstraße" required list="baustellen-liste" autocomplete="off">
       <datalist id="baustellen-liste"></datalist>
+      <span class="hint" id="fass-baustelle-hint" data-i18n="fassBaustelleHint" hidden>Auf welche Baustellen wird der Kraftstoff aus der Bochka verteilt? Mehrere mit Komma trennen.</span>
 
+      <div id="fass-info" class="calc-box" hidden data-i18n="fassInfo">Hier nur eintragen, wenn die große Bochka (Tankwagen) an der Tankstelle befüllt wird. Die Ausgabe aus der Bochka an Fahrzeuge oder Maschinen wird wie bisher im Reiter „Tanken“ mit Tankquelle „Tankwagen“ eingetragen.</div>
+
+      <div id="tankquelle-wrap">
       <label for="tankquelle" data-i18n="lTankquelle">Tankquelle</label>
       <select id="tankquelle" required>
         <option value="" disabled selected data-i18n="optChoose">Bitte auswählen …</option>
         <option value="Tankwagen" data-i18n="optTankwagen">Tankwagen</option>
         <option value="DKV" data-i18n="optDKV">DKV-Karte</option>
       </select>
+      </div>
 
       <div id="fahrzeug-block">
         <div class="cattabs" role="group">
@@ -244,21 +250,21 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       <label for="kartennummer" data-i18n="lKartennummer">Kartennummer (Tankkarte)</label>
       <input type="text" id="kartennummer" placeholder="z. B. K16" required list="karten-liste" autocomplete="off">
       <datalist id="karten-liste"><option value="K16"><option value="K6"><option value="K1"><option value="K2"><option value="K4"><option value="K5"><option value="K7"><option value="K8"><option value="K11"><option value="K17"></datalist>
-      <span class="hint" data-i18n="karteHint">K16 = Beleg …2172, K6 = …6967. Bei Tankwagen nicht nötig.</span>
+      <span class="hint" id="karte-hint" data-i18n="karteHint">K16 = Beleg …2172, K6 = …6967. Bei Tankwagen nicht nötig.</span>
 
       <div class="row2" id="tankwagen-wrap">
         <div>
-          <label for="anfang" data-i18n="lAnfang">Tankwagen Anfang (Liter)</label>
+          <label for="anfang" id="anfang-label" data-i18n="lAnfang">Tankwagen Anfang (Liter)</label>
           <input type="text" inputmode="decimal" id="anfang" placeholder="z. B. 500">
         </div>
         <div>
-          <label for="ende" data-i18n="lEnde">Tankwagen Ende (Liter)<span class="hint" data-i18n="lEndeHint">wird automatisch berechnet</span></label>
+          <label for="ende"><span id="ende-label" data-i18n="lEnde">Tankwagen Ende (Liter)</span><span class="hint" data-i18n="lEndeHint">wird automatisch berechnet</span></label>
           <input type="text" id="ende" placeholder="–" readonly tabindex="-1">
         </div>
       </div>
 
       <div class="diff-box" id="diff-box">
-        <span data-i18n="diffLabel">Verbrauch Tankwagen (Anfang − Menge)</span>
+        <span id="diff-label" data-i18n="diffLabel">Verbrauch Tankwagen (Anfang − Menge)</span>
         <strong id="diff-out">–</strong>
       </div>
 
@@ -429,7 +435,22 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     zeitraum:{de:'Zeitraum', ru:'Период'},
     kanisterTitle:{de:'Kanister je Brigade', ru:'Канистры по бригадам'},
     treffer:{de:'Treffer', ru:'найдено'},
-    sucheHint:{de:'🔍 Suchen: Nummer oder Name', ru:'🔍 Поиск: номер или название'}
+    sucheHint:{de:'🔍 Suchen: Nummer oder Name', ru:'🔍 Поиск: номер или название'},
+    // Große Bochka befüllen (Version 10, 18.11.2026)
+    modeFass:{de:'Große Bochka befüllen', ru:'Заправка бочки'},
+    optFassMaschine:{de:'Große Bochka (befüllt)', ru:'Большая бочка (заправка)'},
+    fassInfo:{de:'Hier nur eintragen, wenn die große Bochka (Tankwagen) an der Tankstelle befüllt wird. Die Ausgabe aus der Bochka an Fahrzeuge oder Maschinen wird wie bisher im Reiter „Tanken“ mit Tankquelle „Tankwagen“ eingetragen.', ru:'Заполнять только когда большую бочку заправляют на АЗС. Выдача из бочки в машины и технику – как раньше во вкладке «Заправка» с источником «Tankwagen (бочка)».'},
+    lBaustelleFass:{de:'Für welche Baustellen (Verteilung)', ru:'Для каких объектов (распределение)'},
+    fassBaustelleHint:{de:'Auf welche Baustellen wird der Kraftstoff aus der Bochka verteilt? Mehrere mit Komma trennen.', ru:'На какие объекты пойдёт топливо из бочки? Несколько – через запятую.'},
+    lMengeFass:{de:'In die Bochka getankt (Liter)', ru:'Залито в бочку (литры)'},
+    lAnfangFass:{de:'In der Bochka vorher (Liter)', ru:'Было в бочке до заправки (литры)'},
+    lEndeFass:{de:'In der Bochka danach (Liter)', ru:'Стало в бочке после (литры)'},
+    diffLabelFass:{de:'Neuer Stand Bochka (vorher + getankt)', ru:'Новый остаток бочки (было + залили)'},
+    needAnfangFass:{de:'Bitte eintragen, wie viel Liter vorher in der Bochka waren (leer = 0).', ru:'Укажите, сколько литров было в бочке до заправки (пустая = 0).'},
+    fassTitle:{de:'Große Bochka', ru:'Большая бочка'},
+    fassBefuellt:{de:'befüllt', ru:'залито'},
+    fassAusgegeben:{de:'ausgegeben', ru:'выдано'},
+    fassStand:{de:'letzter Stand', ru:'последний остаток'}
   };
   var currentLang = (localStorage.getItem('tankprotokoll_lang') || 'de');
   function t(key){ return (L[key] && L[key][currentLang]) || (L[key] && L[key].de) || key; }
@@ -443,6 +464,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     if(document.getElementById('fz-suche')) document.getElementById('fz-suche').placeholder = t('sucheHint');
     if(typeof fillFahrzeugListe === 'function' && document.getElementById('fahrzeug')) { try{ fillFahrzeugListe(); }catch(e){} }
     updateStandLabel();
+    updateFassLabels();
   }
   document.querySelectorAll('.lang-btn').forEach(function(b){
     b.addEventListener('click', function(){
@@ -484,6 +506,18 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   var standWrap = document.getElementById('stand-wrap');
   var brigadeWrap = document.getElementById('brigade-wrap');
   var brigadeEl = document.getElementById('brigade');
+  // Große Bochka befüllen (Version 10)
+  var tankquelleWrap = document.getElementById('tankquelle-wrap');
+  var fassInfoEl = document.getElementById('fass-info');
+  var fassBaustelleHint = document.getElementById('fass-baustelle-hint');
+  var FASS_NAME = 'Große Bochka';
+  function updateFassLabels(){
+    var istFass = typeof currentMode !== 'undefined' && currentMode === 'fass';
+    var bl = document.getElementById('baustelle-label'); if(bl) bl.textContent = istFass ? t('lBaustelleFass') : t('lBaustelle');
+    var al = document.getElementById('anfang-label'); if(al) al.textContent = istFass ? t('lAnfangFass') : t('lAnfang');
+    var el2 = document.getElementById('ende-label'); if(el2) el2.textContent = istFass ? t('lEndeFass') : t('lEnde');
+    var dl = document.getElementById('diff-label'); if(dl) dl.textContent = istFass ? t('diffLabelFass') : t('diffLabel');
+  }
 
   // Zahl mit Komma ODER Punkt zulassen (häufige Fehlerquelle auf dem Handy)
   function toNum(v){
@@ -508,6 +542,11 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       standEl.placeholder = 'z. B. 4512,5';
       var ml = document.querySelector('label[for="menge"]');
       if(ml) ml.textContent = t('lMengeKanister');
+      return;
+    }
+    if(typeof currentMode !== 'undefined' && currentMode === 'fass'){
+      var mlf = document.querySelector('label[for="menge"]');
+      if(mlf) mlf.textContent = t('lMengeFass');
       return;
     }
     var ml2 = document.querySelector('label[for="menge"]');
@@ -619,12 +658,20 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
 
   // Reiter: Tanken / Kanister an Brigade
   function setMode(mode){
+    var warFass = currentMode === 'fass';
     currentMode = mode;
     document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode') === mode); });
     if(mode === 'kanister'){
       machineEl.value = 'Kanister';
     } else if(machineEl.value === 'Kanister'){
       machineEl.value = '';
+    }
+    if(mode === 'fass'){
+      machineEl.value = '';
+      if(!warFass){ anfangEl.value = ''; endeEl.value = ''; }
+    } else if(warFass){
+      // Bochka-Werte nicht in den Reiter „Tanken“ mitnehmen
+      tankquelleEl.value = ''; anfangEl.value = ''; endeEl.value = '';
     }
     updateMachineMode();
   }
@@ -640,17 +687,29 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode') === 'kanister'); });
       machineEl.value = 'Kanister';
     }
+    var istFass = currentMode === 'fass';
+    var ohneFzg = istKanister || istFass;
     brigadeWrap.hidden = !istKanister;
-    fahrzeugBlock.hidden = istKanister;
-    machineWrap.hidden = istKanister;
-    serialWrap.hidden = istKanister;
+    fahrzeugBlock.hidden = ohneFzg;
+    machineWrap.hidden = ohneFzg;
+    serialWrap.hidden = ohneFzg;
     // Kanister-Seite: keine Betriebsstunden (Wunsch Viktoria 10.11.2026)
-    standWrap.hidden = istKanister;
+    standWrap.hidden = ohneFzg;
     brigadeEl.required = istKanister;
-    serialEl.required = !istKanister;
-    standEl.required = !istKanister;
-    machineEl.required = !istKanister;
-    fahrzeugEl.required = !istKanister;
+    serialEl.required = !ohneFzg;
+    standEl.required = !ohneFzg;
+    machineEl.required = !ohneFzg;
+    fahrzeugEl.required = !ohneFzg;
+    tankquelleWrap.hidden = istFass;
+    fassInfoEl.hidden = !istFass;
+    fassBaustelleHint.hidden = !istFass;
+    var kh = document.getElementById('karte-hint'); if(kh) kh.hidden = istFass;
+    if(istFass){
+      tankquelleEl.value = 'DKV';
+      serialEl.value = '';
+      fahrzeugEl.value = '';
+      standEl.value = '';
+    }
     // Kanister: Datum/Uhrzeit = jetzt, nicht änderbar (Tage seit letzter Befüllung werden daraus berechnet)
     datumEl.readOnly = istKanister;
     uhrzeitEl.readOnly = istKanister;
@@ -665,12 +724,24 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       calcBox.hidden = true;
     }
     updateStandLabel();
+    updateFassLabels();
     updateKanisterCalc();
+    if(typeof diffOut !== 'undefined'){ updateTankquelle(); }
   }
   machineEl.addEventListener('change', function(){ updateMachineMode(); });
 
   // Tankquelle: Tankwagen (mit Anfang/Ende) vs. DKV-Karte (nur Menge)
   function updateTankquelle(){
+    if(currentMode === 'fass'){
+      // Bochka wird an der Tankstelle mit DKV-Karte befüllt: Karte Pflicht, Stand vorher/nachher
+      tankwagenWrap.hidden = false;
+      diffBox.hidden = false;
+      anfangEl.required = true;
+      kartennummerEl.required = true;
+      if(!anfangEl.value){ prefillTankwagenAnfang(); }
+      updateDiff();
+      return;
+    }
     var istTankwagen = tankquelleEl.value === 'Tankwagen';
     tankwagenWrap.hidden = !istTankwagen;
     diffBox.hidden = !istTankwagen;
@@ -702,10 +773,12 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     supabase.rpc('last_tankwagen_ende').then(function(res){
       var v = (!res.error && res.data != null) ? Number(res.data) : null;
       if(v == null){
-        var own = entriesCache.filter(function(e){ return e.tankquelle === 'Tankwagen' && e.tankwagen_ende != null; });
+        var own = entriesCache.filter(function(e){ return (e.tankquelle === 'Tankwagen' || e.maschine === 'Tankwagen') && e.tankwagen_ende != null; });
         if(own.length) v = Number(own[0].tankwagen_ende);
       }
-      if(v != null && isFinite(v) && !anfangEl.value && tankquelleEl.value === 'Tankwagen'){
+      // Bochka befüllen: negativer Rechenstand (Befüllungen fehlten bisher) wird nicht übernommen, dann von Hand eintragen
+      if(currentMode === 'fass' && v != null && v < 0) v = null;
+      if(v != null && isFinite(v) && !anfangEl.value && (tankquelleEl.value === 'Tankwagen' || currentMode === 'fass')){
         anfangEl.value = String(v).replace('.', ',');
         twHint.textContent = t('twVorbelegt'); twHint.hidden = false;
         if(!twHint.parentNode) anfangEl.parentNode.appendChild(twHint);
@@ -863,7 +936,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   }
   function renderAuswertung(){
     var z = zeitraumVon(todayISO()) || zeitraumVon(KONTROLL_BEGINN);
-    supabase.from('entries').select('maschine,seriennummer,betriebsstunden,kilometerstand,datum,created_at,brigade,menge_liter')
+    supabase.from('entries').select('maschine,seriennummer,betriebsstunden,kilometerstand,datum,uhrzeit,created_at,brigade,menge_liter,tankquelle,tankwagen_ende')
       .gte('datum', z.start).lte('datum', z.ende)
       .order('datum', { ascending: true }).order('created_at', { ascending: true })
       .then(function(res){
@@ -874,12 +947,26 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
         var rows = res.data || [];
         var kopf = '<p class="muted"><b>' + t('zeitraum') + ' ' + escapeHtml(zeitraumText(z.start)) + '</b></p>';
         var kan = rows.filter(function(r){ return r.maschine === 'Kanister'; });
-        rows = rows.filter(function(r){ return r.maschine !== 'Kanister'; });
+        // Große Bochka: befüllt (maschine Tankwagen) gegen ausgegeben (Tankquelle Tankwagen)
+        var fassRein = rows.filter(function(r){ return r.maschine === 'Tankwagen'; });
+        var fassRaus = rows.filter(function(r){ return r.tankquelle === 'Tankwagen' && r.maschine !== 'Tankwagen'; });
+        rows = rows.filter(function(r){ return r.maschine !== 'Kanister' && r.maschine !== 'Tankwagen'; });
         var kanHtml = '';
+        if(fassRein.length || fassRaus.length){
+          var sum = function(a){ return a.reduce(function(s2, r){ return s2 + (Number(r.menge_liter) || 0); }, 0); };
+          var mitStand = fassRein.concat(fassRaus).filter(function(r){ return r.tankwagen_ende != null; })
+            .sort(function(a, b){ return (a.datum + (a.uhrzeit || '') + a.created_at) < (b.datum + (b.uhrzeit || '') + b.created_at) ? -1 : 1; });
+          var stand = mitStand.length ? mitStand[mitStand.length - 1].tankwagen_ende : null;
+          kanHtml += '<h2 style="margin-top:18px">🛢 ' + t('fassTitle') + '</h2><table class="auswertung-table"><tbody>' +
+            '<tr><td>' + t('fassBefuellt') + '</td><td>' + fmtNum(sum(fassRein)) + ' l</td><td class="muted">' + fassRein.length + 'x</td></tr>' +
+            '<tr><td>' + t('fassAusgegeben') + '</td><td>' + fmtNum(sum(fassRaus)) + ' l</td><td class="muted">' + fassRaus.length + 'x</td></tr>' +
+            (stand != null ? '<tr><td>' + t('fassStand') + '</td><td>' + fmtNum(stand) + ' l</td><td></td></tr>' : '') +
+            '</tbody></table>';
+        }
         if(kan.length){
           var kb = {};
           kan.forEach(function(r){ var k = r.brigade || r.seriennummer; if(!kb[k]) kb[k] = {l:0,n:0}; kb[k].l += Number(r.menge_liter)||0; kb[k].n++; });
-          kanHtml = '<h2 style="margin-top:18px">' + t('kanisterTitle') + '</h2><table class="auswertung-table"><tbody>' +
+          kanHtml += '<h2 style="margin-top:18px">' + t('kanisterTitle') + '</h2><table class="auswertung-table"><tbody>' +
             Object.keys(kb).sort().map(function(k){ return '<tr><td><b>' + escapeHtml(k) + '</b></td><td>' + fmtNum(kb[k].l) + ' l</td><td class="muted">' + kb[k].n + 'x</td></tr>'; }).join('') +
             '</tbody></table>';
         }
@@ -978,7 +1065,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       if(!raw) return;
       var draft = JSON.parse(raw);
       var hasContent = false;
-      if(draft._mode === 'kanister') setMode('kanister');
+      if(draft._mode === 'kanister' || draft._mode === 'fass') setMode(draft._mode);
       draftFields.forEach(function(el){
         if(draft[el.id]){
           el.value = draft[el.id];
@@ -1006,7 +1093,8 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     var a = toNum(anfangEl.value);
     var m = toNum(mengeEl.value);
     if(isFinite(a) && isFinite(m)){
-      var ende = Math.round((a - m) * 10) / 10;
+      // Bochka befüllen: vorher + getankt; Ausgabe aus Tankwagen: Anfang − Menge
+      var ende = currentMode === 'fass' ? Math.round((a + m) * 10) / 10 : Math.round((a - m) * 10) / 10;
       endeEl.value = ende;
       diffOut.textContent = ende.toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l';
     } else {
@@ -1087,7 +1175,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     summaryEl.innerHTML = '<div class="summary-grid">' + names.map(function(name){
       var t2 = totals[name];
       return '<div class="summary-tile">' +
-        '<div class="m-name">' + escapeHtml(name) + '</div>' +
+        '<div class="m-name">' + escapeHtml(name === 'Tankwagen' ? t('optFassMaschine') : name) + '</div>' +
         '<div class="m-total">' + t2.sum.toLocaleString('de-DE',{maximumFractionDigits:1}) + ' l</div>' +
         '<div class="m-count">' + t2.count + '×</div>' +
       '</div>';
@@ -1121,11 +1209,12 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       var standStr = standText(en);
       return '<div class="entry">' +
         '<div class="left">' +
-          '<span class="top">' + escapeHtml(en.maschine) + ' · ' + escapeHtml(en.seriennummer) + '</span>' +
+          '<span class="top">' + (en.maschine === 'Tankwagen' ? '🛢 ' + escapeHtml(t('optFassMaschine')) : escapeHtml(en.maschine) + ' · ' + escapeHtml(en.seriennummer)) + '</span>' +
           '<span class="bottom">' + fmtDate(en.datum) + (en.uhrzeit ? ' ' + escapeHtml(en.uhrzeit) : '') + ' — ' + escapeHtml(en.baustelle) + ' · ' + escapeHtml(tqLabel[en.tankquelle] || en.tankquelle || '–') +
             (en.kartennummer ? ' · Karte ' + escapeHtml(en.kartennummer) : '') +
             (standStr ? ' · ' + standStr : '') +
             (en.kraftstoff ? ' · ' + escapeHtml(en.kraftstoff) : '') +
+            (en.maschine === 'Tankwagen' && en.tankwagen_ende != null ? ' · ' + fmtNum(en.tankwagen_anfang) + ' → ' + fmtNum(en.tankwagen_ende) + ' l' : '') +
             (en.mitarbeiter ? ' · ' + escapeHtml(en.mitarbeiter) : '') +
             (en.bemerkung ? ' · „' + escapeHtml(en.bemerkung) + '“' : '') + '</span>' +
         '</div>' +
@@ -1151,6 +1240,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     fahrzeugEl.value = ''; bemerkungEl.value = ''; erstDatumEl.value = ''; fzSuche.value = ''; fillFahrzeugListe(); twHint.hidden = true; kanisterVorFor = null;
     uhrzeitEl.value = nowHM();
     if(currentMode === 'kanister') machineEl.value = 'Kanister';
+    if(currentMode === 'fass') tankquelleEl.value = 'DKV';
     updateMachineMode();
     updateTankquelle();
     clearPhoto(); clearDraft(); baustelleEl.focus();
@@ -1165,10 +1255,11 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     var baustelle = baustelleEl.value.trim();
     var tankquelle = tankquelleEl.value;
     var istTankwagen = tankquelle === 'Tankwagen';
-    var machine = machineEl.value;
+    var istFass = currentMode === 'fass';
+    var machine = istFass ? 'Tankwagen' : machineEl.value;
     var istKanister = machine === 'Kanister';
     var brigade = brigadeEl.value;
-    var serial = istKanister ? brigade : serialEl.value.trim();
+    var serial = istKanister ? brigade : (istFass ? FASS_NAME : serialEl.value.trim());
     var stand = toNum(standEl.value);
     var uhrzeit = uhrzeitEl.value;
     var bemerkung = bemerkungEl.value.trim();
@@ -1176,8 +1267,8 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
     if(!istKanister && istKm) stand = toKm(standEl.value);
     var menge = toNum(mengeEl.value);
     var kartennummer = kartennummerEl.value.trim();
-    var anfang = istTankwagen ? toNum(anfangEl.value) : null;
-    var ende = istTankwagen ? toNum(endeEl.value) : null;
+    var anfang = (istTankwagen || istFass) ? toNum(anfangEl.value) : null;
+    var ende = (istTankwagen || istFass) ? toNum(endeEl.value) : null;
 
     if(!mitarbeiter || !datum || !uhrzeit || !baustelle || !tankquelle || !machine || !isFinite(menge)){
       errEl.textContent = t('fillAll');
@@ -1199,7 +1290,12 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       errEl.hidden = false;
       return;
     }
-    if(!istKanister && (!serial || (!isFinite(stand) && OHNE_ZAEHLER.indexOf(machine) === -1))){
+    if(istFass && (!isFinite(anfang) || !isFinite(ende))){
+      errEl.textContent = t('needAnfangFass');
+      errEl.hidden = false;
+      return;
+    }
+    if(!istKanister && !istFass && (!serial || (!isFinite(stand) && OHNE_ZAEHLER.indexOf(machine) === -1))){
       errEl.textContent = t('fillAll');
       errEl.hidden = false;
       return;
@@ -1277,7 +1373,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
       return [fmtDate(en.datum), en.mitarbeiter, en.baustelle, 'Quelle: '+(tqLabel[en.tankquelle] || en.tankquelle || '–'), en.maschine, en.seriennummer,
         standText(en) ? ('Zähler: ' + standText(en)) : '',
         'Menge: '+en.menge_liter+' l', 'Karte: '+en.kartennummer,
-        en.tankquelle === 'Tankwagen' ? ('Anfang: '+en.tankwagen_anfang+' l | Ende: '+en.tankwagen_ende+' l') : '',
+        (en.tankquelle === 'Tankwagen' || en.maschine === 'Tankwagen') ? ('Anfang: '+en.tankwagen_anfang+' l | Ende: '+en.tankwagen_ende+' l') : '',
         en.lieferschein_path ? 'Beleg: ja' : 'Beleg: nein',
         en.uhrzeit ? 'Uhrzeit: ' + en.uhrzeit : '', en.brigade ? 'Brigade: ' + en.brigade : '', en.kraftstoff || '',
         en.bemerkung ? 'Bemerkung: ' + en.bemerkung : ''].filter(Boolean).join(' | ');
@@ -1378,7 +1474,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
         doc.setFillColor(246,243,236);
         doc.rect(marginX, y, pageW - marginX*2, rowH, 'F');
       }
-      var istTW = en.tankquelle === 'Tankwagen';
+      var istTW = en.tankquelle === 'Tankwagen' || en.maschine === 'Tankwagen';
       var vals = [
         fmtDate(en.datum), en.mitarbeiter || '–', en.baustelle, tqLabel[en.tankquelle] || en.tankquelle || '–', en.maschine, en.seriennummer,
         standText(en) || '–',
