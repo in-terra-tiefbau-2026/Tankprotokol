@@ -593,6 +593,7 @@ textarea{width:100%;font-size:17px;padding:12px 14px;border-radius:10px;border:2
   var FZG_K = FZG.map(kurz), MASCH_K = MASCH.map(kurz);
   // Maschinentyp wird vorbelegt und kann geändert werden
   function typVon(name){
+    if(name === 'HOJ348') return 'PKW'; // HOJ348 ist ein Pkw (Viktoria, 20.11.2026)
     if(/^Raddumper/.test(name)) return 'Dumper';
     if(/^(Rüttelplatte|Vibrationsplatte)/.test(name)) return 'Rüttelplatte';
     if(/^Stampfer/.test(name)) return 'Sonstige';
